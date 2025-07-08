@@ -44,7 +44,7 @@ class CrawlerState:
         cur = self.conn.execute("""
             SELECT sid, url, depth, attempts FROM pages
             WHERE status = 'queued'
-            ORDER BY depth, attempts, inserted_at
+            ORDER BY depth, attempts DESC, inserted_at
             LIMIT 1
         """)
         return cur.fetchone()

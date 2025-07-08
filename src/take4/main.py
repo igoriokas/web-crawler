@@ -95,6 +95,7 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
                 raise e
         except Exception as e:
             raise e
+    raise RuntimeError("Max attempts reached")
 
 
 def save_file(url, body):
