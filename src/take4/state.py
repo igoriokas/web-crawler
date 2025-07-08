@@ -10,8 +10,8 @@ def now():
 
 class CrawlerState:
     def __init__(self, db_path="state.db"):
-        self.conn = sqlite3.connect(db_path)
-        logger.info("connection open")
+        self.conn = sqlite3.connect(db_path, isolation_level='DEFERRED', timeout=5)
+        logger.info(f"connection open, isolation_level=[{self.conn.isolation_level}]")
         self.conn.execute("PRAGMA journal_mode=WAL")
         self._init_tables()
 

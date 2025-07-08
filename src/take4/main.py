@@ -49,7 +49,7 @@ def is_valid_link(href):
 
 
 def extract_links(state, url, body, depth):
-    if (url.endswith('.html')) and (depth < MAX_DEPTH):
+    if body and (url.endswith('.html')) and (depth < MAX_DEPTH):
         soup = BeautifulSoup(body, "html.parser")
         for a in soup.find_all("a", href=True):
             href = a['href']
@@ -80,6 +80,8 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
 
             # check if retriable status_code
             if response.status_code == 200: # currently only status_code 200 is handled
+                if not response.text:
+                    raise RuntimeError("Reading error, response.text is None")
                 return response.text
             elif response.status_code in RETRY_CODES:
                 next_wait = int(response.headers.get("Retry-After",  next_wait))
@@ -105,6 +107,16 @@ def save_file(url, body):
     with open(path, "w", encoding="utf-8") as f:
         f.write(body)
 
+def save_file_text(url, body):
+    if body and (url.endswith('.html')):
+        soup = BeautifulSoup(body, "html.parser")
+        text = soup.get_text(separator="\n", strip=True)
+        filename = url.replace(PRODOMAIN, "") or "index"
+        filename = filename.replace('.html', ".txt")
+        path = f"text/{filename}"
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
 
 def main():
     with CrawlerState() as state:
@@ -124,6 +136,7 @@ def main():
                     body = fetch_url(state, id, url, depth, attempts)
                     extract_links(state, url, body, depth)
                     save_file(url, body)
+                    save_file_text(url, body)
                     state.mark_success(url)
                 except Exception as e:
                     state.mark_failure(url, str(e).strip().split('\n')[0])
