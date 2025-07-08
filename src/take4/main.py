@@ -33,6 +33,10 @@ PROTOCOL = FIRST_PAGE_PARSED.scheme
 PRODOMAIN = PROTOCOL + "://" + DOMAIN + "/"
 
 
+class RetryableError(RuntimeError):
+    pass
+
+
 def is_valid_link(href):
     if not href or ':' in href:
         return False
@@ -44,19 +48,19 @@ def is_valid_link(href):
     return False
 
 
-def extract_links(url, body):
-    if url.endswith('.html'):    
+def extract_links(state, url, body, depth):
+    if (url.endswith('.html')) and (depth < MAX_DEPTH):
         soup = BeautifulSoup(body, "html.parser")
         for a in soup.find_all("a", href=True):
             href = a['href']
             if is_valid_link(href):
                 full_url = urljoin(url, href).split('#')[0]
                 if full_url.startswith(PRODOMAIN):
-                    yield full_url
+                    state.enqueue_url(full_url, depth + 1)
 
 
 RETRY_CODES = (429, 500, 502, 503, 504)
-NON_RETRY_CODES = (400, 401, 403, 404, 405, 410, 422, 501)
+NON_RETRY_CODES = (400, 401, 403, 404, 501)
 
 def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
     for attempt in range(attempts+1, max_attempts+1):
@@ -67,30 +71,29 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
             response = requests.get(url, timeout=5)
 
             # inject random failure
-            if (id > 9) and (random.random() < 0.8):
-                response.status_code = random.choice(RETRY_CODES+NON_RETRY_CODES)
-                logger.warning(f'inject random failure, status_code {response.status_code}')
+            if (id > 9) and (random.random() < 0.5):
+                if random.random() < 0.5:
+                    raise requests.ConnectionError('simulated connection error')
+                else:
+                    response.status_code = random.choice(RETRY_CODES+NON_RETRY_CODES)
+                    logger.warning(f'inject random failure, status_code {response.status_code}')
 
             # check if retriable status_code
-            if response.status_code in RETRY_CODES:
+            if response.status_code == 200: # currently only status_code 200 is handled
+                return response.text
+            elif response.status_code in RETRY_CODES:
                 next_wait = int(response.headers.get("Retry-After",  next_wait))
-                if attempt < max_attempts:
-                    logger.warning(f"Retryable error {response.status_code}, retrying in {next_wait}s ...")                
-                    time.sleep(next_wait)
-                    continue
-                else:
-                    logger.warning(f"Retryable error {response.status_code}, no more attempts left")
-
-            response.raise_for_status()
-            return response.text
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:  # retriable exception
+                raise RetryableError(f"Retryable HTTP error [{response.status_code}]")
+            else:
+                raise requests.RequestException(f"Non-Retryable HTTP error [{response.status_code}]")         
+        except (RetryableError, requests.Timeout, requests.ConnectionError) as e:  # retriable errors
             if attempt < max_attempts:
-                logger.warning(f"Temporary error: {e}, retrying in {next_wait:.1f}s ...")
+                logger.warning(f"Temporary error: {e}: retrying in {next_wait:.1f} secs ...")
                 time.sleep(next_wait)
             else:
-                logger.warning(f"Temporary error: {e}, no more attempts left")
+                logger.warning(f"Temporary error: {e}: no more attempts left")
                 raise e
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             raise e
 
 
@@ -113,16 +116,14 @@ def main():
                 row = state.peek_url()
                 if not row:
                     print("ALL DONE")
-                    break
+                    return
 
                 try:
                     id, url, depth, attempts = row
                     body = fetch_url(state, id, url, depth, attempts)
+                    extract_links(state, url, body, depth)
                     save_file(url, body)
                     state.mark_success(url)
-                    if depth < MAX_DEPTH:
-                        for link in extract_links(url, body):
-                            state.enqueue_url(link, depth + 1)
                 except Exception as e:
                     state.mark_failure(url, str(e).strip().split('\n')[0])
                     logger.error(f"[id {id}]: {e}")
@@ -130,7 +131,7 @@ def main():
                 time.sleep(random.uniform(0.2, 0.8))
             except KeyboardInterrupt:
                 logger.critical("Interrupted, stopping ...")
-                break
+                return
 
 
 if __name__ == "__main__":
