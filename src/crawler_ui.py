@@ -24,8 +24,12 @@ if lockfile.LockFile().is_locked():
     print("Another crawler process is already running, EXIT") # intentionally not logging
     exit()
 
+# create DB tables if starting from scratch, for UI display
+with state.CrawlerState():
+    pass
+
 def get_all_pages():
-    with state.CrawlerState().conn as conn:
+    with sqlite3.connect(cfg.DB_PATH) as conn:
         pages = pd.read_sql("SELECT * FROM pages", conn)
         words = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
         return pages, words

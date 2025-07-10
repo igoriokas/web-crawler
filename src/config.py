@@ -28,7 +28,7 @@ START_URL = "https://books.toscrape.com/index.html"
 MAX_DEPTH = 3
 
 # Pause between page fetches (in seconds), to avoid overloading the server
-GET_PAGE_DELAY = 0.5
+GET_PAGE_DELAY = 0.1
 
 # Default HTTP headers sent with each request
 DEFAULT_HEADERS = {
