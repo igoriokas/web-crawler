@@ -61,7 +61,7 @@ def draw_progress_bar(df, ax):
 
 # Create the Tkinter window
 root = tk.Tk()
-root.title("My Crawler")
+root.title("My Web Crawler")
 root.geometry("1200x900")
 
 # Create a Canvas widget and add it to Tkinter
