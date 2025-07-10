@@ -11,7 +11,7 @@ import logging.config
 import yaml
 import utils
 import json
-import sqlite_lock
+import lockfile
 
 import re
 from collections import Counter
@@ -71,7 +71,7 @@ def extract_links(state, url, body, depth):
         raise PageException(e)
 
 
-def fetch_url(state, id, url, depth, attempts, max_attempts=3, base_delay=1):
+def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
     for attempt in range(attempts+1, max_attempts+1):
         next_wait =  base_delay * (2 ** attempt)
         try:
@@ -188,11 +188,10 @@ def crawler_loop():
 
 def main():   
     try:
-        with sqlite_lock.SQLiteWriteLock():
+        with lockfile.LockFile():
             crawler_loop()
     except BlockingIOError:
         print("Another crawler process is already running, EXIT")
-
 
 
 if __name__ == "__main__":

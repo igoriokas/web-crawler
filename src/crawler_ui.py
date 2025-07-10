@@ -6,17 +6,20 @@ import sqlite3
 import os
 import time
 import glob
-import counter
+import word_counter
 import threading
 import matplotlib.pyplot as plt
-import main
+import crawler
+import word_counter
 import logging
-import sqlite_lock
+import lockfile
+import state
 
-if sqlite_lock.SQLiteWriteLock().is_locked():
+if lockfile.LockFile().is_locked():
     print("Another crawler process is already running, EXIT")
     exit()
     
+state.CrawlerState()
 logger = logging.getLogger('crawler.ui')
 
 RUN_FOLDER = '.'
@@ -24,17 +27,20 @@ DBNAME = f"{RUN_FOLDER}/state.db"
 LOGFILE = f"{RUN_FOLDER}/log.log"
 
 
-def draw_progress_bar(ax):    
+def get_all_pages():
     with sqlite3.connect(DBNAME) as conn:
-        df = pd.read_sql("SELECT * FROM pages", conn)
+        pages = pd.read_sql("SELECT * FROM pages", conn)
+        words = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
+        return pages, words
 
+def draw_progress_bar(df, ax):    
     # counts
     counts = df['status'].value_counts()
     visited = counts.get('visited', 0)
     failed = counts.get('failed', 0)
     queued = counts.get('queued', 0)
     done = visited + failed
-    total = done + queued
+    total = done + queued or 1 # to avoid division by zero at start
     
     ax.clear()
     ax.barh(0, visited, color='green', label=f'Visited: {visited} ({visited/total:.0%})')
@@ -61,7 +67,7 @@ root.geometry("1200x900")
 # Create a Canvas widget and add it to Tkinter
 fig, ax = plt.subplots(figsize=(8, 1.5), dpi=50)
 canvas = FigureCanvasTkAgg(fig, master=root)
-draw_progress_bar(ax)
+draw_progress_bar(get_all_pages()[0], ax)
 canvas.draw()
 canvas.get_tk_widget().pack(fill=tk.X, expand=None, padx=10, pady=10)
 
@@ -69,13 +75,13 @@ canvas.get_tk_widget().pack(fill=tk.X, expand=None, padx=10, pady=10)
 # Control buttons
 
 def toggle_pause():
-    main.pause = not main.pause
-    logger.info(f'main.pause - {main.pause}')
-    btn_pause.config(text="Resume" if main.pause else "Pause")
+    crawler.pause = not crawler.pause
+    logger.info(f'main.pause - {crawler.pause}')
+    btn_pause.config(text="Resume" if crawler.pause else "Pause")
 
 def stop_follow():
-    main.stop = True
-    logger.info(f'main.stop - {main.stop}')
+    crawler.stop = True
+    logger.info(f'main.stop - {crawler.stop}')
     btn_pause.config(state=tk.DISABLED)
     btn_stop.config(state=tk.DISABLED)
 
@@ -90,8 +96,19 @@ btn_pause = tk.Button(button_frame, text="Pause", width=10, command=toggle_pause
 btn_pause.pack(side=tk.LEFT, padx=5, pady=5)
 btn_stop = tk.Button(button_frame, text="Stop", width=10, command=stop_follow)
 btn_stop.pack(side=tk.LEFT, padx=5, pady=5)
-btn_clear = tk.Button(button_frame, text="Clear log", width=10, command=clear_log)
+btn_clear = tk.Button(button_frame, text="Clear log", width=10, command=lambda: textbox_set_text(text_box, None))
 btn_clear.pack(side=tk.RIGHT, padx=5, pady=5)
+
+# ROW 3
+row3 = tk.Frame(root)
+row3.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+t1 = tk.Text(row3, bg="ivory", fg="black", wrap=tk.NONE, height=10, width=60)
+t1.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+t3 = tk.Text(row3, bg="ivory", fg="black", wrap=tk.WORD, height=10, width=20)
+t3.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+t2 = tk.Text(row3, bg="ivory", fg="black", wrap=tk.NONE, height=10, width=20)
+t2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+
 
 # Frame to hold text and scrollbars
 frame = tk.Frame(root)
@@ -120,27 +137,52 @@ frame.grid_columnconfigure(0, weight=1)
 file = open(LOGFILE, "r")
 # file.seek(0, os.SEEK_END)  # Go to the end of the file
 
+
+def textbox_set_text(tb:tk.Text, text:str):
+    text = text or ""
+    tb.config(state='normal')
+    tb.delete("1.0", tk.END)
+    tb.insert("1.0", text)
+    tb.config(state='disabled')
+
+
+def textbox_append_text(tb:tk.Text, text:str):
+    text = text or ""
+    tb.config(state='normal')
+    tb.insert(tk.END, text)
+    tb.see(tk.END)
+    tb.config(state='disabled')
+
+
 def update_plot():
-    draw_progress_bar(ax)
+    pages, words = get_all_pages()
+    draw_progress_bar(pages, ax)
     canvas.draw()
 
-    lines = file.read()
-    if lines:
-        text_box.config(state='normal')
-        text_box.insert(tk.END, lines)
-        text_box.see(tk.END)
-        text_box.config(state='disabled')
+    er = pages.groupby('error')['sid'].count().to_frame().sort_values('sid', ascending=False).reset_index()
+    er = er.rename(columns={'sid':'count'})
+    textbox_set_text(t1, f"ERROR COUNTS:\n\n{er.to_string(index=False, header=False)}")
+    textbox_append_text(t1, f"\n\nIs word count from disk identical to DB word count - {words.equals(word_counter.summ_counters_folder_df(f'{RUN_FOLDER}/words'))}")
 
+    textbox_set_text(t2, f"TOP WORD COUNTS:\n\n{words[:100].to_string(index=False, header=False)}")
+
+    files_cnt_text = 'FILES PRODUCED:\n\n'
+    files_cnt_text += f'  pages: {len(glob.glob(f'{RUN_FOLDER}/pages/**/*.*', recursive=True))}\n'
+    files_cnt_text += f'   text: {len(glob.glob(f'{RUN_FOLDER}/text/**/*.*', recursive=True))}\n'
+    files_cnt_text += f'   word: {len(glob.glob(f'{RUN_FOLDER}/words/**/*.*', recursive=True))}\n'
+    textbox_set_text(t3, files_cnt_text) 
+
+    textbox_append_text(text_box, file.read())
     root.after(1000, update_plot)
 
 update_plot()
 
 # Start crawler thread
-thread = threading.Thread(target=main.main, args=(), daemon=True)
+thread = threading.Thread(target=crawler.main, args=(), daemon=True)
 thread.start()
 
 def on_close():
-    main.stop = True
+    crawler.stop = True
     while thread.is_alive():
         print("waiting for crawler to stop ...")
         time.sleep(1)    

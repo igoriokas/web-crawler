@@ -1,6 +1,6 @@
-import logging
 import glob
 import json
+import pandas as pd
 from collections import Counter
 
 def summ_counters_folder(folder:str):
@@ -10,3 +10,8 @@ def summ_counters_folder(folder:str):
         with open(filename, 'r', encoding='utf-8') as f:
             totals.update(Counter(json.load(f)))
     return totals, len(filenames)
+
+def summ_counters_folder_df(folder:str):
+    totals, _ = summ_counters_folder(folder)
+    return pd.DataFrame(totals.items(), columns=['word','count']).sort_values(['count', 'word'], ascending=[False, True]).reset_index(drop=True)
+

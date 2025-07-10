@@ -1,8 +1,8 @@
 import os
 import fcntl  # On Unix-like systems only
 
-class SQLiteWriteLock:
-    def __init__(self, lock_file="crawler.lock"):
+class LockFile:
+    def __init__(self, lock_file="lock"):
         self.lock_file = lock_file
         self.fd = None
 

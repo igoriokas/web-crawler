@@ -20,7 +20,7 @@ def http_get(url, timeout):
             requests.Timeout('simulated Timeout'),
         ])
         
-    if random.random() < 0.15:
+    if random.random() < 0.2:
         response = requests.models.Response()
         response.status_code = random.choice(RETRY_CODES+NON_RETRY_CODES)
         response._content = 'simulated error'.encode('utf-8')
