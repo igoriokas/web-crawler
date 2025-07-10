@@ -28,7 +28,7 @@ logging.config.dictConfig(logging_config)
 logger = logging.getLogger('crawler.main')
 
 FIRST_PAGE = "https://books.toscrape.com/index.html"
-MAX_DEPTH = 2
+MAX_DEPTH = 1
 HEADERS = {
     "User-Agent": "MyResearchCrawler/1.0 (contact: crawler@homework.com)"
 }
@@ -180,7 +180,7 @@ def crawler_loop():
                     logger.critical(f"Fix environment and restart the crawler")
                     return
         
-                time.sleep(random.uniform(1.2, 1.8))
+                time.sleep(random.uniform(0.2, 0.8))
             except KeyboardInterrupt as e:
                 logger.critical("Interrupted, stopping ...")
                 return
