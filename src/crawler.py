@@ -8,40 +8,27 @@ from bs4 import BeautifulSoup
 from state import CrawlerState
 import logging
 import logging.config
-import yaml
-import utils
 import json
-import lockfile
-
 import re
 from collections import Counter
 
-# Load config from YAML
-with open("logging_config.yaml", 'r') as f:
-    logging_config = yaml.safe_load(f)
+# my imports
+import config as cfg
+import lockfile
+import utils
+from exceptions import RetryableError, PageException
 
-os.makedirs("run", exist_ok=True)
-os.chdir("run")
 
-# Apply logging configuration
-logging.config.dictConfig(logging_config)
+# runtime preparations
+os.makedirs(cfg.WORKDIR, exist_ok=True)
+os.chdir(cfg.WORKDIR)
+logging.config.dictConfig(cfg.logging_config) # Apply logging configuration, do it after chdir to workdir!
 logger = logging.getLogger('crawler.main')
 
-FIRST_PAGE = "https://books.toscrape.com/index.html"
-MAX_DEPTH = 3
 
-HEADERS = {
-    "User-Agent": "MyResearchCrawler/1.0 (contact: crawler@homework.com)"
-}
-
-FIRST_PAGE_PARSED = urlparse(FIRST_PAGE)
-DOMAIN = FIRST_PAGE_PARSED.netloc
-PROTOCOL = FIRST_PAGE_PARSED.scheme
-PRODOMAIN = PROTOCOL + "://" + DOMAIN + "/"
-
-
-class RetryableError(RequestException): pass
-class PageException(RequestException): pass
+# flags to control crawler from UI
+stop = False
+pause = False
 
 
 def is_valid_link(href):
@@ -49,7 +36,7 @@ def is_valid_link(href):
         return False
     
     parsed = urlparse(href)
-    if parsed.netloc == '' or parsed.netloc.endswith(DOMAIN): # limit to local links
+    if parsed.netloc == '' or parsed.netloc.endswith(cfg.DOMAIN): # limit to local links
         return True
     
     return False
@@ -60,13 +47,13 @@ def extract_links(state, url, body, depth):
         if random.random() < 0.05:
             raise RuntimeError('simulated page parsing error')
 
-        if body and (url.endswith('.html')) and (depth < MAX_DEPTH):
+        if body and (url.endswith('.html')) and (depth < cfg.MAX_DEPTH):
             soup = BeautifulSoup(body, "html.parser")
             for a in soup.find_all("a", href=True):
                 href = a['href']
                 if is_valid_link(href):
                     full_url = urljoin(url, href).split('#')[0]
-                    if full_url.startswith(PRODOMAIN):
+                    if full_url.startswith(cfg.PRODOMAIN):
                         state.enqueue_url(full_url, depth + 1)
     except Exception as e:
         raise PageException(e)
@@ -103,7 +90,7 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
 
 def save_file_raw(url, body):
     if body:
-        filename = url.replace(PRODOMAIN, "") or "index.html"
+        filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
         utils.file_write(f"pages/{filename}", body)
 
 
@@ -111,14 +98,14 @@ def save_file_text(url, body):
     if body and (url.endswith('.html')):
         soup = BeautifulSoup(body, "html.parser")
         text = soup.get_text(separator="\n", strip=True)
-        filename = url.replace(PRODOMAIN, "") or "index.html"
+        filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
         filename = filename.replace('.html', ".txt")
         utils.file_write(f"text/{filename}", text)
         return text
 
 
 def save_word_counts_json(url:str, words:Counter):
-    filename = url.replace(PRODOMAIN, "") or "index.html"
+    filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
     filename = "words/" + filename + ".json"
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, 'w', encoding='utf-8') as f:
@@ -139,17 +126,13 @@ def count_words(text):
         raise PageException("Failed to count words") from e
     
 
-stop = False
-pause = False
-
-
 def crawler_loop():
     global stop, pause
 
     with CrawlerState() as state:
         # Enqueue starting URL if blank state
         if state.len() == 0:
-            state.enqueue_url(FIRST_PAGE, 0)
+            state.enqueue_url(cfg.START_URL, 0)
 
         while not stop:
             try:
