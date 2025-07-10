@@ -26,5 +26,6 @@ root:
 loggers:
   urllib3:
     level: WARN
-    # propagate: False
+  matplotlib:
+    level: WARN
 

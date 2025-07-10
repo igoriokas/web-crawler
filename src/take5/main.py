@@ -137,17 +137,21 @@ def count_words(text):
         raise PageException("Failed to count words") from e
     
 
+stop_flag = False
+
 def main():
+    global stop_flag
+    
     with CrawlerState() as state:
         # Enqueue starting URL if blank state
         if state.len() == 0:
             state.enqueue_url(FIRST_PAGE, 0)
 
-        while True:
+        while not stop_flag:
             try:
                 row = state.peek_url()
                 if not row:
-                    print("ALL DONE")
+                    logger.info("ALL DONE")
                     return
 
                 try:
@@ -170,7 +174,7 @@ def main():
                     logger.critical(f"Fix environment and restart the crawler")
                     return
         
-                time.sleep(random.uniform(0.2, 0.8))
+                time.sleep(random.uniform(1.2, 1.8))
             except KeyboardInterrupt as e:
                 logger.critical("Interrupted, stopping ...")
                 return
