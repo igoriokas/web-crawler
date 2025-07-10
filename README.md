@@ -6,7 +6,7 @@
 
 
 ## run Web Crawler:
-*  UI: `python crawle_ui.py`
+*  UI: `python crawler_ui.py`
 * CLI: `python crawler.py`
 
 ## UI screenshot:
