@@ -10,7 +10,14 @@ import counter
 import threading
 import matplotlib.pyplot as plt
 import main
+import logging
+import sqlite_lock
 
+if sqlite_lock.SQLiteWriteLock().is_locked():
+    print("Another crawler process is already running, EXIT")
+    exit()
+    
+logger = logging.getLogger('crawler.ui')
 
 RUN_FOLDER = '.'
 DBNAME = f"{RUN_FOLDER}/state.db"
@@ -60,15 +67,15 @@ canvas.get_tk_widget().pack(fill=tk.X, expand=None, padx=10, pady=10)
 
 
 # Control buttons
-paused = False
 
 def toggle_pause():
-    global paused
-    paused = not paused
-    btn_pause.config(text="Resume" if paused else "Pause")
+    main.pause = not main.pause
+    logger.info(f'main.pause - {main.pause}')
+    btn_pause.config(text="Resume" if main.pause else "Pause")
 
 def stop_follow():
-    main.stop_flag = True
+    main.stop = True
+    logger.info(f'main.stop - {main.stop}')
     btn_pause.config(state=tk.DISABLED)
     btn_stop.config(state=tk.DISABLED)
 
@@ -133,7 +140,7 @@ thread = threading.Thread(target=main.main, args=(), daemon=True)
 thread.start()
 
 def on_close():
-    main.stop_flag = True
+    main.stop = True
     while thread.is_alive():
         print("waiting for crawler to stop ...")
         time.sleep(1)    

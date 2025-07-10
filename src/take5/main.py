@@ -11,6 +11,7 @@ import logging.config
 import yaml
 import utils
 import json
+import sqlite_lock
 
 import re
 from collections import Counter
@@ -137,18 +138,23 @@ def count_words(text):
         raise PageException("Failed to count words") from e
     
 
-stop_flag = False
+stop = False
+pause = False
 
-def main():
-    global stop_flag
-    
+
+def crawler_loop():
+    global stop, pause
+
     with CrawlerState() as state:
         # Enqueue starting URL if blank state
         if state.len() == 0:
             state.enqueue_url(FIRST_PAGE, 0)
 
-        while not stop_flag:
+        while not stop:
             try:
+                while pause:
+                    time.sleep(1)
+
                 row = state.peek_url()
                 if not row:
                     logger.info("ALL DONE")
@@ -178,6 +184,15 @@ def main():
             except KeyboardInterrupt as e:
                 logger.critical("Interrupted, stopping ...")
                 return
+
+
+def main():   
+    try:
+        with sqlite_lock.SQLiteWriteLock():
+            crawler_loop()
+    except BlockingIOError:
+        print("Another crawler process is already running, EXIT")
+
 
 
 if __name__ == "__main__":
