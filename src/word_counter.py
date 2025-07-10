@@ -1,7 +1,19 @@
 import glob
 import json
+import re
 import pandas as pd
 from collections import Counter
+
+import exceptions
+
+def count_words(text):
+    try:
+        if text and len(text) > 0:
+            words = re.findall(r'\b\w+\b', text.lower())
+            return Counter(words)
+    except Exception as e:
+        raise exceptions.PageException("Failed to count words") from e
+
 
 def summ_counters_folder(folder:str):
     totals = Counter()

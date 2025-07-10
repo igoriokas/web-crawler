@@ -19,17 +19,13 @@ import state
 
 logger = logging.getLogger('crawler.ui')
 
+# If another crawler is already running using the same WORKDIR don't even start the UI
 if lockfile.LockFile().is_locked():
-    print("Another crawler process is already running, EXIT")
+    print("Another crawler process is already running, EXIT") # intentionally not logging
     exit()
 
-# create DB tables if starting from scratch    
-with state.CrawlerState():
-    pass
-
-
 def get_all_pages():
-    with sqlite3.connect(cfg.DB_PATH) as conn:
+    with state.CrawlerState().conn as conn:
         pages = pd.read_sql("SELECT * FROM pages", conn)
         words = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
         return pages, words

@@ -20,7 +20,6 @@ class CrawlerState:
         self._init_tables()
 
     def _init_tables(self):
-        # sid must be PRIMARY KEY to have AUTOINCREMENT feature
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS pages (
                 sid INTEGER PRIMARY KEY,
