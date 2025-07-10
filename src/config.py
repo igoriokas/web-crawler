@@ -22,7 +22,8 @@ WORKDIR = "./data"
 
 # Starting point and scope for the crawler
 # It anchors the allowed domain and URL prefix the crawler should stay within
-START_URL = "https://books.toscrape.com/index.html"
+# START_URL = "https://books.toscrape.com/index.html"
+START_URL = "https://quotes.toscrape.com"
 
 # Limit on link-following depth
 MAX_DEPTH = 3
@@ -32,7 +33,8 @@ GET_PAGE_DELAY = 0.1
 
 # Default HTTP headers sent with each request
 DEFAULT_HEADERS = {
-    "User-Agent": "MyResearchCrawler/1.0 (contact: mycrawler@homework.com)"
+    'User-Agent': 'MyResearchCrawler/1.0 (contact: mycrawler@homework.com)',
+    'Accept': 'text/html, text/plain'
 }
 
 
@@ -42,9 +44,9 @@ DEFAULT_HEADERS = {
 
 # Extract parts of the start URL for use in crawling
 _START_URL_PARSED = urlparse(START_URL)
-PROTOCOL = _START_URL_PARSED.scheme             # 'https'
-DOMAIN = _START_URL_PARSED.netloc               # 'example.com'             domain the crawler should stay within
-PRODOMAIN = PROTOCOL + "://" + DOMAIN + "/"     # 'https://example.com/'    prefix the crawler should stay within
+PROTOCOL = _START_URL_PARSED.scheme     # 'https'
+DOMAIN = _START_URL_PARSED.netloc       # 'example.com'             domain the crawler should stay within
+PRODOMAIN = PROTOCOL + "://" + DOMAIN   # 'https://example.com/'    prefix the crawler should stay within
 
 os.makedirs(WORKDIR, exist_ok=True)
 LOCK_FILE = f'{WORKDIR}/lock'

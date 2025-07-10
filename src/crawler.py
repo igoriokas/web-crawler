@@ -39,15 +39,26 @@ def is_valid_link(href):
 
     if not href or ':' in href:
         return False
-    
+
     parsed = urlparse(href)
-    if parsed.netloc == '' or parsed.netloc.endswith(cfg.DOMAIN): # limit links inside given domain
-        return True
-    
-    return False
+
+    # Domain check: only same domain or relative URLs
+    if parsed.netloc and not parsed.netloc.endswith(cfg.DOMAIN):
+        return False
+
+    # Whitelisted extensions (or clean URLs)
+    allowed_suffixes = ('.html', '.htm', '.txt', '/')
+
+    if not href.lower().endswith(allowed_suffixes):
+        # allow "clean" paths like /about or /contact without extension
+        path = parsed.path
+        if '.' in path.split('/')[-1]:  # has file extension not in list
+            return False
+
+    return True
 
 
-def extract_links(state, url, body, depth):
+def extract_links(state, url, type, body, depth):
     """
     Parses the HTML content of a given URL to extract and enqueue valid internal links for further crawling.
 
@@ -73,18 +84,19 @@ def extract_links(state, url, body, depth):
         if random.random() < 0.05:
             raise RuntimeError('simulated page parsing error')
 
-        if body and (url.endswith('.html')) and (depth < cfg.MAX_DEPTH):
+        if body and (type == 'text/html') and (depth < cfg.MAX_DEPTH):
             soup = BeautifulSoup(body, "html.parser")
             for a in soup.find_all("a", href=True):
                 href = a['href']
                 if is_valid_link(href):
-                    full_url = urljoin(url, href).split('#')[0]
+                    full_url = urljoin(url, href).split('#')[0].rstrip('/')
                     if full_url.startswith(cfg.PRODOMAIN):
                         state.enqueue_url(full_url, depth + 1)
     except Exception as e:
         raise PageException(e)
 
 
+# TODO: fetch only TEXT docs
 def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
     """
     Attempts to fetch the content of a URL with retry logic and exponential backoff.
@@ -118,11 +130,18 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
             logger.info(f"fetch: id {id} | depth {depth} | attempt {attempt} | {url}")
             state.mark_attempt(url)
             response = utils.http_get(url, timeout=5)
+            content_type = response.headers.get('Content-Type', None)
+            logger.info(f'got: [{response.status_code}] {content_type}')
 
             if response.status_code == 200: # currently only status_code 200 is handled
                 if not response.text:
                     raise PageException("Reading error, response.text is None")
-                return response.text
+                if not content_type:
+                    raise PageException("Reading error, response.headers['Content-Type'] not set")
+                content_type = content_type.lower().split(';')[0].strip()
+                if content_type not in ('text/html','text/plain'):
+                    raise PageException(f"Reading error, Content-Type {content_type} not supported")
+                return content_type, response.text
             elif response.status_code in utils.RETRY_CODES:
                 next_wait = int(response.headers.get("Retry-After",  next_wait))
                 raise RetryableError(f"Retryable HTTP error [{response.status_code}]")
@@ -140,20 +159,38 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
     raise PageException("Max attempts reached")
 
 
-def save_file_raw(url, body):
+def add_extension_if_missing(url, type):
+    url = url.rstrip('/') # Remove trailing slash
+    
+    if os.path.splitext(url)[1]: # Skip if already has extension
+        return url
+
+    # Decide extension
+    if type == 'text/html':
+        return url + '.html'
+    elif type == 'text/plain':
+        return url + '.txt'
+
+    return url
+
+def save_file_raw(url, type, body):
     if body:
         filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
+        print(filename)
         utils.file_write(f"{cfg.WORKDIR}/pages/{filename}", body)
 
-# TODO: not all docs parsed as text for word count
-def save_file_text(url, body):
-    if body and (url.endswith('.html')):
+
+def save_file_text(url, type, body):
+    if type == 'text/html':
         soup = BeautifulSoup(body, "html.parser")
         text = soup.get_text(separator="\n", strip=True)
-        filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
-        filename = filename.replace('.html', ".txt")
-        utils.file_write(f"{cfg.WORKDIR}/text/{filename}", text)
-        return text
+    else: # 'text/plain"
+        text = body
+
+    filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
+    filename = filename.replace('.html', ".txt")
+    utils.file_write(f"{cfg.WORKDIR}/text/{filename}", text)
+    return text
 
 
 def save_word_counts_json(url:str, words:Counter):
@@ -183,19 +220,20 @@ def crawler_loop():
                     return
 
                 try:
-                    logger.info('-------------------------------------------')
+                    logger.info('')
                     id, url, depth, attempts = row
-                    body = fetch_url(state, id, url, depth, attempts)
-                    extract_links(state, url, body, depth)
-                    save_file_raw(url, body)
-                    text = save_file_text(url, body)
+                    type, body = fetch_url(state, id, url, depth, attempts)
+                    extract_links(state, url, type, body, depth)
+                    urlext = add_extension_if_missing(url, type)
+                    save_file_raw(urlext, type, body)
+                    text = save_file_text(urlext, type, body)
                     words = word_counter.count_words(text)
-                    save_word_counts_json(url, words)
+                    save_word_counts_json(urlext, words)
                     state.update_word_counts_mark_success(words, url)
                 except RequestException as e:   # mark as falure and move to next page
                     state.mark_failure(url, utils.etos(e))
                     logger.error(f"{utils.etos(e)}")
-                except OSError as e:    # stop programm 
+                except Exception as e:    # stop programm 
                     state.decrease_attempt(url) # don't count the attempt
                     logger.critical(f"{utils.etos(e)}")
                     logger.critical(f"Fix environment and restart the crawler")
