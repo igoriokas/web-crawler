@@ -8,7 +8,7 @@ logger = logging.getLogger('crawler.utils')
 
 
 RETRY_CODES = (429, 500, 502, 503, 504)
-NON_RETRY_CODES = (400, 401, 403, 404, 501)
+NON_RETRY_CODES = (403, 404, 501) # 400, 401
 
 def etos(e:BaseException):
     return f"{e.__class__.__name__}({str(e).strip().split('\n')[0][:100]})"
