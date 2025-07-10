@@ -14,13 +14,13 @@ def etos(e:BaseException):
     return f"{e.__class__.__name__}({str(e).strip().split('\n')[0][:100]})"
 
 def http_get(url, timeout):
-    if random.random() < 0.1:
+    if random.random() < 0.05:
         raise random.choice([
             requests.ConnectionError('simulated ConnectionError'),
             requests.Timeout('simulated Timeout'),
         ])
         
-    if random.random() < 0.1:
+    if random.random() < 0.15:
         response = requests.models.Response()
         response.status_code = random.choice(RETRY_CODES+NON_RETRY_CODES)
         response._content = 'simulated error'.encode('utf-8')
