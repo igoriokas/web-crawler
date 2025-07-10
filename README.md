@@ -10,3 +10,4 @@ two way to run Web Crawler:
 2.  UI: puthon crawle_ui.py
 
 UI screenshot:
+![](doc/Screenshot%202025-07-10%20at%2015.04.13.png)
