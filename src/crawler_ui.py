@@ -18,8 +18,11 @@ import state
 if lockfile.LockFile().is_locked():
     print("Another crawler process is already running, EXIT")
     exit()
-    
-state.CrawlerState()
+
+# create DB tables if starting from scratch    
+with state.CrawlerState():
+    pass
+
 logger = logging.getLogger('crawler.ui')
 
 RUN_FOLDER = '.'
@@ -133,11 +136,6 @@ frame.grid_rowconfigure(0, weight=1)
 frame.grid_columnconfigure(0, weight=1)
 
 
-# Track file position
-file = open(LOGFILE, "r")
-# file.seek(0, os.SEEK_END)  # Go to the end of the file
-
-
 def textbox_set_text(tb:tk.Text, text:str):
     text = text or ""
     tb.config(state='normal')
@@ -153,6 +151,8 @@ def textbox_append_text(tb:tk.Text, text:str):
     tb.see(tk.END)
     tb.config(state='disabled')
 
+
+logfile = open(LOGFILE, "r")
 
 def update_plot():
     pages, words = get_all_pages()
@@ -172,10 +172,8 @@ def update_plot():
     files_cnt_text += f'   word: {len(glob.glob(f'{RUN_FOLDER}/words/**/*.*', recursive=True))}\n'
     textbox_set_text(t3, files_cnt_text) 
 
-    textbox_append_text(text_box, file.read())
+    textbox_append_text(text_box, logfile.read())
     root.after(1000, update_plot)
-
-update_plot()
 
 # Start crawler thread
 thread = threading.Thread(target=crawler.main, args=(), daemon=True)
@@ -186,6 +184,7 @@ def on_close():
     while thread.is_alive():
         print("waiting for crawler to stop ...")
         time.sleep(1)    
+    logfile.close()
     root.destroy()
     
 root.protocol("WM_DELETE_WINDOW", on_close)
@@ -193,4 +192,5 @@ root.createcommand('tk::mac::Quit', on_close) # Intercept macOS Quit from menu (
 
 # Start the Tkinter event loop
 root.focus_force()            # Grab keyboard focus
+update_plot()
 root.mainloop()
