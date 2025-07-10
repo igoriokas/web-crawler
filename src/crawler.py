@@ -28,7 +28,8 @@ logging.config.dictConfig(logging_config)
 logger = logging.getLogger('crawler.main')
 
 FIRST_PAGE = "https://books.toscrape.com/index.html"
-MAX_DEPTH = 1
+MAX_DEPTH = 3
+
 HEADERS = {
     "User-Agent": "MyResearchCrawler/1.0 (contact: crawler@homework.com)"
 }
