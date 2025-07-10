@@ -3,17 +3,21 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 import sqlite3
-import os
 import time
 import glob
 import word_counter
 import threading
 import matplotlib.pyplot as plt
-import crawler
 import word_counter
 import logging
+
+# my imports
+import config as cfg
+import crawler
 import lockfile
 import state
+
+logger = logging.getLogger('crawler.ui')
 
 if lockfile.LockFile().is_locked():
     print("Another crawler process is already running, EXIT")
@@ -23,15 +27,9 @@ if lockfile.LockFile().is_locked():
 with state.CrawlerState():
     pass
 
-logger = logging.getLogger('crawler.ui')
-
-RUN_FOLDER = '.'
-DBNAME = f"{RUN_FOLDER}/state.db"
-LOGFILE = f"{RUN_FOLDER}/log.log"
-
 
 def get_all_pages():
-    with sqlite3.connect(DBNAME) as conn:
+    with sqlite3.connect(cfg.DB_PATH) as conn:
         pages = pd.read_sql("SELECT * FROM pages", conn)
         words = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
         return pages, words
@@ -152,7 +150,7 @@ def textbox_append_text(tb:tk.Text, text:str):
     tb.config(state='disabled')
 
 
-logfile = open(LOGFILE, "r")
+logfile = open(cfg.LOGFILE, "r")
 
 def update_plot():
     pages, words = get_all_pages()
@@ -162,14 +160,14 @@ def update_plot():
     er = pages.groupby('error')['sid'].count().to_frame().sort_values('sid', ascending=False).reset_index()
     er = er.rename(columns={'sid':'count'})
     textbox_set_text(t1, f"ERROR COUNTS:\n\n{er.to_string(index=False, header=False)}")
-    textbox_append_text(t1, f"\n\nIs word count from disk identical to DB word count - {words.equals(word_counter.summ_counters_folder_df(f'{RUN_FOLDER}/words'))}")
+    textbox_append_text(t1, f"\n\nIs word count from disk identical to DB word count - {words.equals(word_counter.summ_counters_folder_df(f'{cfg.WORKDIR}/words'))}")
 
     textbox_set_text(t2, f"TOP WORD COUNTS:\n\n{words[:100].to_string(index=False, header=False)}")
 
     files_cnt_text = 'FILES PRODUCED:\n\n'
-    files_cnt_text += f'  pages: {len(glob.glob(f'{RUN_FOLDER}/pages/**/*.*', recursive=True))}\n'
-    files_cnt_text += f'   text: {len(glob.glob(f'{RUN_FOLDER}/text/**/*.*', recursive=True))}\n'
-    files_cnt_text += f'   word: {len(glob.glob(f'{RUN_FOLDER}/words/**/*.*', recursive=True))}\n'
+    files_cnt_text += f'  pages: {len(glob.glob(f'{cfg.WORKDIR}/pages/**/*.*', recursive=True))}\n'
+    files_cnt_text += f'   text: {len(glob.glob(f'{cfg.WORKDIR}/text/**/*.*',  recursive=True))}\n'
+    files_cnt_text += f'   word: {len(glob.glob(f'{cfg.WORKDIR}/words/**/*.*', recursive=True))}\n'
     textbox_set_text(t3, files_cnt_text) 
 
     textbox_append_text(text_box, logfile.read())

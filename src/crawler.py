@@ -7,7 +7,6 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from state import CrawlerState
 import logging
-import logging.config
 import json
 import re
 from collections import Counter
@@ -18,11 +17,6 @@ import lockfile
 import utils
 from exceptions import RetryableError, PageException
 
-
-# runtime preparations
-os.makedirs(cfg.WORKDIR, exist_ok=True)
-os.chdir(cfg.WORKDIR)
-logging.config.dictConfig(cfg.logging_config) # Apply logging configuration, do it after chdir to workdir!
 logger = logging.getLogger('crawler.main')
 
 
@@ -91,7 +85,7 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
 def save_file_raw(url, body):
     if body:
         filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
-        utils.file_write(f"pages/{filename}", body)
+        utils.file_write(f"{cfg.WORKDIR}/pages/{filename}", body)
 
 
 def save_file_text(url, body):
@@ -100,13 +94,13 @@ def save_file_text(url, body):
         text = soup.get_text(separator="\n", strip=True)
         filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
         filename = filename.replace('.html', ".txt")
-        utils.file_write(f"text/{filename}", text)
+        utils.file_write(f"{cfg.WORKDIR}/text/{filename}", text)
         return text
 
 
 def save_word_counts_json(url:str, words:Counter):
     filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
-    filename = "words/" + filename + ".json"
+    filename = f"{cfg.WORKDIR}/words/" + filename + ".json"
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(words, f, ensure_ascii=False, indent='')

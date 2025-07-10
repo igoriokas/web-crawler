@@ -1,4 +1,6 @@
 import yaml
+import os
+import logging.config
 from urllib.parse import urlparse
 
 # --------------------------------------------------------
@@ -46,4 +48,12 @@ _START_URL_PARSED = urlparse(START_URL)
 PROTOCOL = _START_URL_PARSED.scheme             # 'https'
 DOMAIN = _START_URL_PARSED.netloc               # 'example.com'             domain the crawler should stay within
 PRODOMAIN = PROTOCOL + "://" + DOMAIN + "/"     # 'https://example.com/'    prefix the crawler should stay within
+
+os.makedirs(WORKDIR, exist_ok=True)
+LOCK_FILE = f'{WORKDIR}/lock'
+DB_PATH = f'{WORKDIR}/state.db'
+LOGFILE = f'{WORKDIR}/log.log'
+
+logging_config['handlers']['file']['filename'] = f'{WORKDIR}/log.log' # owerride logfile path to be inside WORKDIR, need to improve this approach
+logging.config.dictConfig(logging_config) # Apply logging configuration, do it after workdir is created
 

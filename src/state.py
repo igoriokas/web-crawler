@@ -2,6 +2,8 @@ from datetime import datetime
 import sqlite3
 import logging
 
+# my imports
+import config as cfg
 
 logger = logging.getLogger('crawler.state')
 
@@ -11,7 +13,7 @@ def now():
 
 
 class CrawlerState:
-    def __init__(self, db_path="state.db"):
+    def __init__(self, db_path=cfg.DB_PATH):
         self.conn = sqlite3.connect(db_path, isolation_level='DEFERRED', timeout=5)
         logger.info(f"connection open, isolation_level=[{self.conn.isolation_level}]")
         self.conn.execute("PRAGMA journal_mode=WAL")
@@ -110,14 +112,3 @@ class CrawlerState:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
-
-if __name__ == "__main__":
-    state = CrawlerState()
-    print(state.len())
-    state.enqueue_url('myurl1',1)
-    print(state.len())
-    state.enqueue_url('myurl1',1)
-    print(state.len())
-    state.enqueue_url('myurl2',1)
-    print(state.len())
-    state.close()

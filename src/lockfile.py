@@ -1,8 +1,11 @@
 import os
 import fcntl  # On Unix-like systems only
 
+# my imports
+import config as cfg
+
 class LockFile:
-    def __init__(self, lock_file="lock"):
+    def __init__(self, lock_file=cfg.LOCK_FILE):
         self.lock_file = lock_file
         self.fd = None
 
