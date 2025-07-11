@@ -66,6 +66,9 @@ The lock is specific to the configured **working directory**. That means:
 
 This mechanism ensures safe, singleton operation **per crawl session**, while supporting concurrent execution across separate targets.
 
+## UI
+some explanations about the UI ...
+
 ## Limitations
 
 * Currently limited to processing documents with a *Content-Type* header of either *text/html* or *text/plain*.
