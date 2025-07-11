@@ -58,7 +58,6 @@ def is_valid_link(href):
     Returns:
         bool: True if the link is considered valid and internal, False otherwise.
     """
-
     if not href or ':' in href:
         return False
 
@@ -102,7 +101,6 @@ def extract_links(state, url, type, body, depth):
     Raises:
         PageException: On any parsing or processing error.
     """
-
     try:
         if random.random() < 0.05:
             raise RuntimeError('simulated page parsing error')
@@ -145,7 +143,6 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
         - Honors 'Retry-After' header if provided by the server.
         - Logs each attempt with the attempt number, depth, and URL.
     """
-
     for attempt in range(attempts+1, max_attempts+1):
         next_wait =  base_delay * (2 ** attempt)
         try:
@@ -194,7 +191,6 @@ def add_extension_if_missing(url, type):
     Returns:
         str: The URL with an appropriate extension if one was missing.
     """
-    
     url = url.rstrip('/') # Remove trailing slash
     
     if os.path.splitext(url)[1]: # Skip if already has an extension
@@ -218,7 +214,6 @@ def url_to_filepath(url, type):
     Returns:
         str: A relative file path suitable for saving the resource locally.
     """
-    
     url = add_extension_if_missing(url, type)
     filename = url.replace(cfg.PRODOMAIN, "") or "index.html"
     return filename
@@ -232,7 +227,6 @@ def save_file_raw(filename:str, body:str):
         filename (str): Relative path to save the file as.
         body (str): The content to be saved.
     """
-    
     if body:
         utils.file_write(f"{cfg.WORKDIR}/pages/{filename}", body)
 
@@ -249,7 +243,6 @@ def save_file_text(filename:str, type, body):
     Returns:
         str: Extracted or original plain text content. To be used later for word counting.
     """
-    
     if type == 'text/html':
         soup = BeautifulSoup(body, "html.parser")
         text = soup.get_text(separator="\n", strip=True)
@@ -269,7 +262,6 @@ def save_word_counts_json(filename:str, word_counter:Counter):
         filename (str): Original filename to base the JSON filename on.
         word_counter (Counter): A Counter object mapping words to their frequencies.
     """
-
     if not word_counter:
         return    
 
@@ -349,7 +341,6 @@ def main():
     crawler runs at a time. If the lock is successfully acquired, it starts the main
     crawling loop. 
     """
-
     try:
         with lockfile.LockFile():
             crawler_loop()

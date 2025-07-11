@@ -55,6 +55,17 @@ The crawler maintains its state in a **SQLite database**, allowing it to persist
 
 This approach ensures the crawler is **robust**, **restartable**, and **memory-efficient** when processing large-scale web content.
 
+### Process Locking
+
+To ensure that only one instance of the crawler operates on a given dataset, the system uses a **file-based locking mechanism** via the `LockFile` utility class.
+This prevents concurrent processes from interfering with shared resources like the database, text output, or logs.
+
+The lock is specific to the configured **working directory**. That means:
+- **Only one crawler instance can run per working directory**.
+- **Multiple independent crawler instances** can run in parallel, as long as each uses a separate `WORKDIR`.
+
+This mechanism ensures safe, singleton operation **per crawl session**, while supporting concurrent execution across separate targets.
+
 ## Limitations
 
 * Currently limited to processing documents with a *Content-Type* header of either *text/html* or *text/plain*.
