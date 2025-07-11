@@ -1,4 +1,7 @@
 # Web Crawler project
+Implementation of a basic web crawler capable of retrieving and analyzing text content from web pages.
+The main goal is to count the instances of each word in the text retrieved from web pages.
+
 
 ## Usage:
 
@@ -80,4 +83,16 @@ some explanations about the UI ...
 
 * Implement support for parsing and respecting robots.txt directives to ensure compliant and ethical crawling behavior (https://en.wikipedia.org/wiki/Robots.txt).
 * Multithreading - Although multithreading is not strictly necessary for the crawler’s purpose—especially since aggressive crawling can trigger rate limits or blacklisting—it may still be worthwhile to implement safe parallel processing as an exercise. This would provide a useful learning opportunity and lay the groundwork for future scalability, while still respecting polite crawling behavior.
-* Improve Word Extraction mechanism.
+* Consider parsing and extracting text from other types (e.g., PDFs).
+* Word Extraction Improvements
+	- Use more sophisticated tokenization (e.g., nltk or spaCy) for better word extraction.
+	- Filter out stop words and apply stemming or lemmatization for cleaner data.
+* Write proper unit tests.
+
+
+## TODO
+* explain error injection
+* explain data flow
+* explain word count validation (DB vs FS)
+* think about more KPI to add
+* Submit a report of the analysis and recommendation ???
