@@ -10,8 +10,8 @@ whether to launch the crawler in CLI (headless) or UI (interactive) mode.
 usage: python crawler.py [-h] [-d DEPTH] [-no-ui] url workdir
 
 positional arguments:
-  url                Starting point and scope for the crawler (https://quotes.toscrape.com)
-  workdir            Working directory for the crawler, for output and state (data-quotes)
+  url                Starting URL and scope (https://quotes.toscrape.com)
+  workdir            Working directory, for output and state (data-quotes)
 
 options:
   -h, --help         show this help message and exit

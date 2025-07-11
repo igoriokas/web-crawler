@@ -52,8 +52,8 @@ def argparse_and_init(description):
 
     # Parse program arguments
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("url", type=str, help="Starting point and scope for the crawler (https://quotes.toscrape.com)")
-    parser.add_argument("workdir", type=str, help="Working directory for the crawler, for output and state (data-quotes)")
+    parser.add_argument("url", type=str, help="Starting URL and scope (https://quotes.toscrape.com)")
+    parser.add_argument("workdir", type=str, help="Working directory, for output and state (data-quotes)")
     parser.add_argument("-d", "--depth", type=int, default=1, help="Max crawl depth (default: %(default)s)")
     parser.add_argument("-no-ui", action="store_true", help="Run in non-UI mode (headless)")
     args = parser.parse_args()
