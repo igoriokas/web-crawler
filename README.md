@@ -3,14 +3,18 @@
 ## run Web Crawler:
 
 * Create a new conda environment:\
-  `conda create -n web-crawler-env python=3.10`
+  `conda create -n crawler python=3.13 -y`
 * Activate the conda environment:\
-  `conda activate web-crawler-env`
+  `conda activate crawler`
 * Install dependencies using pip from your requirements.txt:\
   `pip install -r requirements.txt`
 * Run the Crawler:
   - UI: `python crawler_ui.py`
   - CLI: `python crawler.py`
+
+#### to delete the conda environment:
+  - `conda deactivate`
+  - `conda remove --name crawler --all -y`
 
 ## UI screenshot:
 
