@@ -2,8 +2,15 @@
 
 ## run Web Crawler:
 
-* UI: `python crawler_ui.py`
-* CLI: `python crawler.py`
+* Create a new conda environment:\
+  `conda create -n web-crawler-env python=3.10`
+* Activate the conda environment:\
+  `conda activate web-crawler-env`
+* Install dependencies using pip from your requirements.txt:\
+  `pip install -r requirements.txt`
+* Run the Crawler:
+  - UI: `python crawler_ui.py`
+  - CLI: `python crawler.py`
 
 ## UI screenshot:
 
@@ -22,11 +29,11 @@ The crawler maintains its state in a **SQLite database**, allowing it to persist
 #### Tables
 
 - **`pages`**: Tracks every URL discovered by the crawler, along with metadata:
+
   - `url`, `depth`: Used to control crawl order (BFS).
   - `status`: Can be `'queued'`, `'visited'`, or `'failed'`.
   - `attempts`, `last_attempt`: Support retry logic and tracking.
   - `error`: Stores failure reasons for diagnostics.
-
 - **`words`**: Stores the global word frequency counts aggregated across visited pages.
 
 #### Behavior
