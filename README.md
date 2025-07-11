@@ -29,6 +29,7 @@ The main goal is to count the instances of each word in the text retrieved from 
 ```bash
   python crawler.py https://quotes.toscrape.com ./data-quotes -d 2
 ```
+* By default crawler starts in UI mode, for CLI mode use `--no-ui` flag
 
 #### to delete the conda environment:
   - `conda deactivate`
