@@ -160,7 +160,7 @@ def update_plot():
     er = pages.groupby('error')['sid'].count().to_frame().sort_values('sid', ascending=False).reset_index()
     er = er.rename(columns={'sid':'count'})
     textbox_set_text(t1, f"ERROR COUNTS:\n\n{er.to_string(index=False, header=False)}")
-    textbox_append_text(t1, f"\n\nIs word count from disk identical to DB word count - {words.equals(word_counter.summ_counters_folder_df(f'{cfg.WORKDIR}/words'))}")
+    textbox_append_text(t1, f"\n\nIs word count from disk identical to DB word count - {words.equals(word_counter.sum_counters_folder_df(f'{cfg.WORKDIR}/words'))}")
 
     textbox_set_text(t2, f"TOP WORD COUNTS:\n\n{words[:100].to_string(index=False, header=False)}")
 

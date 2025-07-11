@@ -22,8 +22,8 @@ WORKDIR = "./data"
 
 # Starting point and scope for the crawler
 # It anchors the allowed domain and URL prefix the crawler should stay within
-START_URL = "https://quotes.toscrape.com"
-# START_URL = "https://books.toscrape.com/index.html"
+# START_URL = "https://quotes.toscrape.com"
+START_URL = "https://books.toscrape.com/index.html"
 # START_URL = "https://en.wikipedia.org/wiki/NASA"
 
 # Limit on link-following depth
