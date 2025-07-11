@@ -294,13 +294,7 @@ def crawler_loop():
     with CrawlerState() as state:
         # Enqueue starting URL if blank state, resume previous run overwise
         if state.len() == 0:
-            logger.info(f'START NEW CRAWL: {cfg.START_URL} -> {cfg.WORKDIR} (depth {cfg.MAX_DEPTH} hops)')
             state.enqueue_url(cfg.START_URL, 0)
-        else:
-            url, depth = state.start_url()
-            logger.info(f'RESUME PREVIOUS CRAWL: {url} -> {cfg.WORKDIR} (depth {cfg.MAX_DEPTH} hops)')
-        time.sleep(3)
-
 
         while not stop:
             try:

@@ -76,6 +76,18 @@ The crawler maintains its state in a **SQLite database**, allowing it to persist
 
 This approach ensures the crawler is **robust**, **restartable**, and **memory-efficient** when processing large-scale web content.
 
+### Crawl Session Persistence and Parameter Locking
+
+Once the crawl has been initiated with a specific url, workdir, and depth, these parameters become locked for that working directory. \
+Specifically:
+-	The program saves the url and depth settings in the workdir when the crawl starts.
+-	If you re-run the program with the same workdir, it will resume the previous session using the originally saved url and depth, regardless of what is specified on the command line.
+-	You cannot change the url or depth for an existing workdir. 
+- **To start a new crawl with different settings, specify a new or empty workdir.**
+
+This design ensures that crawling progress can be paused and resumed safely without risking data inconsistency.
+
+
 ### Process Locking
 
 To ensure that only one instance of the crawler operates on a given dataset, the system uses a **file-based locking mechanism** via the `LockFile` utility class.
@@ -93,8 +105,6 @@ some explanations about the UI ...
 ## Limitations
 
 * Currently limited to processing documents with a *Content-Type* header of either *text/html* or *text/plain*.
-* Currently, if the crawler is restarted midway with a different starting URL while retaining the existing workdir content, the state and content may become inconsistent or corrupted. This behavior should be disabled to prevent such cases.
-* Consider naming the workdir based on the domain or starting URL (optionally including a timestamp and max_depth) to improve organization and traceability. While this helps distinguish between different crawl sessions, the design should still allow for safe restarts using the same workdir to continue interrupted work without data loss or inconsistency.
 * Basic Word Extraction: Currently, the crawler uses a simple rule to extract words - any sequence of letters, digits, or underscores separated by spaces or punctuation. This will include hashes, special symbols, etc.
 
 ## Improvements

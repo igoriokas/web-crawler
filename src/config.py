@@ -1,8 +1,12 @@
 import argparse
+import json
 import yaml
 import os
+import time
 import logging.config
 from urllib.parse import urlparse
+from pathlib import Path
+
 
 logger = logging.getLogger('crawler.config')
 
@@ -58,27 +62,41 @@ def argparse_and_init(description):
     parser.add_argument("-no-ui", action="store_true", help="Run in non-UI mode (headless)")
     args = parser.parse_args()
 
-    START_URL = args.url
-    WORKDIR = args.workdir
-    MAX_DEPTH = args.depth
     NO_UI = args.no_ui
-    
+    WORKDIR = args.workdir
+    START_URL = args.url
+    MAX_DEPTH = args.depth
+
+    # Apply logging config
+    os.makedirs(WORKDIR, exist_ok=True)
+    with open(LOGGING_CONFIG_FILE, 'r') as f:
+        logging_config = yaml.safe_load(f)
+    logging_config['handlers']['file']['filename'] = f'{WORKDIR}/log.log' # override logfile path to be inside WORKDIR, need to improve this approach
+    logging.config.dictConfig(logging_config) # Apply logging configuration, do it after workdir is created
+
+    # Load previous config if exists
+    cfg = Path(f'{WORKDIR}/config.json')
+    if cfg.is_file(): # resume previous crawl
+        with open(cfg, 'r') as f:
+            oldcfg = json.load(f)
+            START_URL = oldcfg['url']
+            MAX_DEPTH = oldcfg['depth']
+        logger.info(f"RESUME PREVIOUS CRAWL: {START_URL} -> {WORKDIR} (max depth: {MAX_DEPTH} hops)")
+    else:   # start new crawl
+        with open(cfg, 'w') as f:
+            json.dump(vars(args), f, indent=2)
+        logger.info(f"START NEW CRAWL: {START_URL} -> {WORKDIR} (max depth: {MAX_DEPTH} hops)")
+    input('Press Enter to continue ...')
+
+
     _START_URL_PARSED = urlparse(START_URL)
     PROTOCOL = _START_URL_PARSED.scheme     # 'https'
     DOMAIN = _START_URL_PARSED.netloc       # 'example.com'             domain the crawler should stay within
     PRODOMAIN = PROTOCOL + "://" + DOMAIN   # 'https://example.com/'    prefix the crawler should stay within
 
-    os.makedirs(WORKDIR, exist_ok=True)
     LOCK_FILE = f'{WORKDIR}/lock'
     DB_PATH = f'{WORKDIR}/state.db'
     LOGFILE = f'{WORKDIR}/log.log'
-
-    # Apply logging config
-    with open(LOGGING_CONFIG_FILE, 'r') as f:
-        logging_config = yaml.safe_load(f)
-    logging_config['handlers']['file']['filename'] = f'{WORKDIR}/log.log' # override logfile path to be inside WORKDIR, need to improve this approach
-    logging.config.dictConfig(logging_config) # Apply logging configuration, do it after workdir is created
-    logger.info(f"CRAWL: {args.url} -> {args.workdir} (max depth: {args.depth} hops)")
 
 
 
