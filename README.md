@@ -1,12 +1,12 @@
 # Web Crawler project
 
-## run Web Crawler:
+## Usage:
 
 * Create a new conda environment:\
   `conda create -n crawler python=3.13 -y`
 * Activate the conda environment:\
   `conda activate crawler`
-* Install dependencies using pip from your requirements.txt:\
+* Install dependencies using pip from requirements.txt:\
   `pip install -r requirements.txt`
 * Run the Crawler:
   - UI: `python crawler_ui.py`
