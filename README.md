@@ -74,8 +74,10 @@ some explanations about the UI ...
 * Currently limited to processing documents with a *Content-Type* header of either *text/html* or *text/plain*.
 * Currently, if the crawler is restarted midway with a different starting URL while retaining the existing workdir content, the state and content may become inconsistent or corrupted. This behavior should be disabled to prevent such cases.
 * Consider naming the workdir based on the domain or starting URL (optionally including a timestamp and max_depth) to improve organization and traceability. While this helps distinguish between different crawl sessions, the design should still allow for safe restarts using the same workdir to continue interrupted work without data loss or inconsistency.
+* Basic Word Extraction: Currently, the crawler uses a simple rule to extract words - any sequence of letters, digits, or underscores separated by spaces or punctuation. This will include hashes, special symbols, etc.
 
 ## Improvements
 
 * Implement support for parsing and respecting robots.txt directives to ensure compliant and ethical crawling behavior (https://en.wikipedia.org/wiki/Robots.txt).
 * Multithreading - Although multithreading is not strictly necessary for the crawler’s purpose—especially since aggressive crawling can trigger rate limits or blacklisting—it may still be worthwhile to implement safe parallel processing as an exercise. This would provide a useful learning opportunity and lay the groundwork for future scalability, while still respecting polite crawling behavior.
+* Improve Word Extraction mechanism.
