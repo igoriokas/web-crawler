@@ -3,7 +3,7 @@ Implementation of a basic web crawler capable of retrieving and analyzing text c
 The main goal is to count the instances of each word in the text retrieved from web pages.
 
 
-## Usage:
+## How to run:
 
 * Install miniconda3, follow steps in:\
   https://www.anaconda.com/docs/getting-started/miniconda/install
@@ -13,7 +13,7 @@ The main goal is to count the instances of each word in the text retrieved from 
   `conda activate crawler`
 * Install dependencies using pip from requirements.txt:\
   `pip install -r requirements.txt`
-* Run the Crawler:
+* Usage:
 ```
   usage: python crawler.py [-h] [-d DEPTH] [-no-ui] url workdir
 
