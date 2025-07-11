@@ -5,6 +5,8 @@ The main goal is to count the instances of each word in the text retrieved from 
 
 ## Usage:
 
+* Install miniconda3, follow steps in:\
+  https://www.anaconda.com/docs/getting-started/miniconda/install
 * Create a new conda environment:\
   `conda create -n crawler python=3.13 -y`
 * Activate the conda environment:\
@@ -12,8 +14,20 @@ The main goal is to count the instances of each word in the text retrieved from 
 * Install dependencies using pip from requirements.txt:\
   `pip install -r requirements.txt`
 * Run the Crawler:
-  - UI: `python crawler_ui.py`
-  - CLI: `python crawler.py`
+```
+  usage: python crawler.py [-h] [-d DEPTH] [-no-ui] url workdir
+
+  positional arguments:
+    url                Starting point and scope for the crawler (https://quotes.toscrape.com)
+    workdir            Working directory for the crawler, for output and state (data-quotes)
+
+  options:
+    -h, --help         show this help message and exit
+    -d, --depth DEPTH  Max crawl depth (default: 1)
+    -no-ui             Run in non-UI mode (headless)
+
+  example: python crawler.py https://quotes.toscrape.com data-quotes -d 2
+```
 
 #### to delete the conda environment:
   - `conda deactivate`

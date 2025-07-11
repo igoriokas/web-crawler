@@ -13,15 +13,19 @@ import logging
 
 # my imports
 import config as cfg
-import crawler
+import crawler_cli
 import lockfile
 import state
 
+if __name__ == "__main__": # starting directly from crawler_ui.py
+    cfg.argparse_and_init('crawler-ui')
+
 logger = logging.getLogger('crawler.ui')
+logger.info('Start in UI mode')
 
 # If another crawler is already running using the same WORKDIR don't even start the UI
 if lockfile.LockFile().is_locked():
-    print("Another crawler process is already running, EXIT") # intentionally not logging
+    print(f"Another crawler process is already running in {cfg.WORKDIR}, EXIT") # intentionally not logging
     exit()
 
 # create DB tables if starting from scratch, for UI display
@@ -76,13 +80,13 @@ canvas.get_tk_widget().pack(fill=tk.X, expand=None, padx=10, pady=10)
 # Control buttons
 
 def toggle_pause():
-    crawler.pause = not crawler.pause
-    logger.info(f'main.pause - {crawler.pause}')
-    btn_pause.config(text="Resume" if crawler.pause else "Pause")
+    crawler_cli.pause = not crawler_cli.pause
+    logger.info(f'main.pause - {crawler_cli.pause}')
+    btn_pause.config(text="Resume" if crawler_cli.pause else "Pause")
 
 def stop_follow():
-    crawler.stop = True
-    logger.info(f'main.stop - {crawler.stop}')
+    crawler_cli.stop = True
+    logger.info(f'main.stop - {crawler_cli.stop}')
     btn_pause.config(state=tk.DISABLED)
     btn_stop.config(state=tk.DISABLED)
 
@@ -174,11 +178,11 @@ def update_plot():
     root.after(1000, update_plot)
 
 # Start crawler thread
-thread = threading.Thread(target=crawler.main, args=(), daemon=True)
+thread = threading.Thread(target=crawler_cli.main, args=(), daemon=True)
 thread.start()
 
 def on_close():
-    crawler.stop = True
+    crawler_cli.stop = True
     while thread.is_alive():
         print("waiting for crawler to stop ...")
         time.sleep(1)    

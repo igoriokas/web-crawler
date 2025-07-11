@@ -24,13 +24,14 @@ class LockFile:
             # Only one crawler per WORKDIR will proceed beyond this point
     """    
 
-    def __init__(self, lock_file=cfg.LOCK_FILE):
+    def __init__(self, lock_file=None):
         """
         Initialize the LockFile with a path to the lock file.
 
         Args:
             lock_file (str): Path to the lock file. Defaults to cfg.LOCK_FILE.
         """
+        lock_file = cfg.LOCK_FILE if lock_file is None else lock_file
         self.lock_file = lock_file
         self.fd = None
 

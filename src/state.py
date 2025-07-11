@@ -30,13 +30,14 @@ class CrawlerState:
     ensuring proper connection management.
     """
 
-    def __init__(self, db_path=cfg.DB_PATH):
+    def __init__(self, db_path=None):
         """
         Initialize the database connection and create required tables if they do not exist.
 
         Parameters:
             db_path (str): Path to the SQLite database file.
         """
+        db_path = cfg.DB_PATH if db_path is None else db_path
         self.conn = sqlite3.connect(db_path, isolation_level='DEFERRED', timeout=5)
         logger.info(f"connection open, isolation_level=[{self.conn.isolation_level}]")
         self.conn.execute("PRAGMA journal_mode=WAL")
@@ -82,6 +83,12 @@ class CrawlerState:
             INSERT OR IGNORE INTO pages (url, depth, inserted_at) VALUES (?, ?, ?)
         """, (url, depth, now()))
         self.conn.commit()
+
+    def start_url(self):
+        cur = self.conn.execute("""
+            SELECT url, depth FROM pages WHERE sid = '1' LIMIT 1
+        """)
+        return cur.fetchone()
 
     def peek_url(self):
         """

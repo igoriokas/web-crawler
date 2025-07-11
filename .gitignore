@@ -208,3 +208,4 @@ __marimo__/
 
 src/**/run
 src/**/data
+src/**/data-*
