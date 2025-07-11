@@ -2,7 +2,6 @@ import argparse
 import json
 import yaml
 import os
-import time
 import logging.config
 from urllib.parse import urlparse
 from pathlib import Path
@@ -14,26 +13,14 @@ logger = logging.getLogger('crawler.config')
 # Simple configuration settings for the crawler.
 # This plain Python-based config is easy to read, modify and flexible enough for the current project needs.
 #
+# MOST IMPORTANT SETTINGS (WORKDIR, START_URL, MAX_DEPTH) ARE LOADED FROM COMMAND LINE ARGUMENTS
+#
 # For more complex applications, an external config file (YAML, JSON, ...) could be used.
 # Here, simplicity is preferred.
 # --------------------------------------------------------
 
 # Logging config file
 LOGGING_CONFIG_FILE = "logging.yaml"
-
-# Working directory for the crawler.
-# All crawler data (HTML files, logs, state, etc.) will be saved here.
-# The directory will be created automatically if it doesn't exist.
-WORKDIR = "./data_quotes"
-
-# Starting point and scope for the crawler
-# It anchors the allowed domain and URL prefix the crawler should stay within
-START_URL = "https://quotes.toscrape.com"
-# START_URL = "https://books.toscrape.com/index.html"
-# START_URL = "https://en.wikipedia.org/wiki/NASA"
-
-# Limit on link-following depth
-MAX_DEPTH = 2
 
 # Pause between page fetches (in seconds), to avoid overloading the server
 GET_PAGE_DELAY = 0.1
@@ -44,10 +31,22 @@ DEFAULT_HEADERS = {
     'Accept': 'text/html, text/plain'
 }
 
-
 # --------------------------------------------------------
 #   Derived config (DO NOT MODIFY) 
+#   Those settings are loaded or derived from command line arguments
 # --------------------------------------------------------
+
+# Working directory for the crawler.
+# All crawler data (HTML files, logs, state, etc.) will be saved here.
+# The directory will be created automatically if it doesn't exist.
+WORKDIR = None
+
+# Starting point and scope for the crawler
+# It anchors the allowed domain and URL prefix the crawler should stay within
+START_URL = None
+
+# Limit on link-following depth
+MAX_DEPTH = None
 
 PROTOCOL = DOMAIN = PRODOMAIN = LOCK_FILE = DB_PATH = LOGFILE = NO_UI = None
 
