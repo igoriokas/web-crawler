@@ -144,9 +144,15 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
         try:
             logger.info(f"fetch: id {id} | depth {depth} | attempt {attempt} | {url}")
             state.mark_attempt(url)
+
+            # FETCH
+            fetch_duration = time.time()
             response = utils.http_get(url, timeout=5)
+            fetch_duration = time.time() - fetch_duration
+
             content_type = response.headers.get('Content-Type', None)
-            logger.info(f'got: [{response.status_code}] {content_type}')
+            logger.info(f'got: [{response.status_code}] {content_type} | duration {fetch_duration:.3f} secs')
+            state.log_attempt(id, url, depth, attempt, response.status_code, fetch_duration, None)
 
             if response.status_code == 200: # currently only status_code 200 is handled
                 if not response.text:

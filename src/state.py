@@ -60,6 +60,18 @@ class CrawlerState:
             )
         """)
         self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS attempts (
+                sid INTEGER,
+                url TEXT,
+                depth INTEGER,
+                attempt INTEGER,
+                status INTEGER,
+                duration REAL,
+                attempt_time TEXT,
+                error TEXT
+            )
+        """)
+        self.conn.execute("""
             CREATE TABLE IF NOT EXISTS words (
                 word TEXT PRIMARY KEY,
                 count INTEGER DEFAULT 0
@@ -84,11 +96,11 @@ class CrawlerState:
         """, (url, depth, now()))
         self.conn.commit()
 
-    def start_url(self):
-        cur = self.conn.execute("""
-            SELECT url, depth FROM pages WHERE sid = '1' LIMIT 1
-        """)
-        return cur.fetchone()
+    def log_attempt(self, sid, url, depth, attempt, status, duration, error):
+        self.conn.execute("""
+            INSERT INTO attempts (sid, url, depth, attempt, status, duration, attempt_time, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (sid, url, depth, attempt, status, float(f'{duration:.3f}'), now(), error))
+        self.conn.commit()
 
     def peek_url(self):
         """
