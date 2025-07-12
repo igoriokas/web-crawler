@@ -151,7 +151,7 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
             fetch_duration = time.time() - fetch_duration
 
             content_type = response.headers.get('Content-Type', None)
-            logger.info(f'got: [{response.status_code}] {content_type} | duration {fetch_duration:.3f} secs')
+            logger.debug(f'got: [{response.status_code}] {content_type} | fetch_duration {fetch_duration:.3f} secs')
             state.log_attempt(id, url, depth, attempt, response.status_code, fetch_duration, None)
 
             if response.status_code == 200: # currently only status_code 200 is handled
@@ -162,7 +162,7 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
                 content_type = content_type.lower().split(';')[0].strip()
                 if content_type not in content_type_to_ext.keys():
                     raise PageException(f"Reading error, Content-Type {content_type} not supported")
-                return content_type, response.text
+                return content_type, response.text, attempt
             elif response.status_code in utils.RETRY_CODES:
                 next_wait = int(response.headers.get("Retry-After",  next_wait))
                 raise RetryableError(f"Retryable HTTP error [{response.status_code}]")
@@ -331,8 +331,9 @@ def crawler_loop():
 
                 try:
                     logger.info('')
-                    id, url, depth, attempts = row
-                    type, body = fetch_url(state, id, url, depth, attempts, max_attempts=cfg.MAX_ATTEMPTS)
+                    total_duration = time.time()
+                    sid, url, depth, attempts = row
+                    type, body, attempt = fetch_url(state, sid, url, depth, attempts, max_attempts=cfg.MAX_ATTEMPTS)
                     extract_links(state, url, type, body, depth)
                     filepath = url_to_filepath(url, type)
                     save_file_raw(filepath, body)
@@ -341,6 +342,9 @@ def crawler_loop():
                     save_word_counts_json(filepath, words)
                     state.update_word_counts_mark_success(words, url)
                     word_counter.save_total_count(state)
+                    total_duration = time.time() - total_duration
+                    logger.debug(f'total_duration: {total_duration:.3f} secs')
+                    state.attempt_update_total_duration(sid, url, depth, attempt, total_duration)
                 except RequestException as e:   # mark as falure and move to next page
                     state.mark_failure(url, utils.etos(e))
                     logger.error(f"{utils.etos(e)}")

@@ -66,7 +66,8 @@ class CrawlerState:
                 depth INTEGER,
                 attempt INTEGER,
                 status INTEGER,
-                duration REAL,
+                fetch_duration REAL,
+                total_duration REAL,
                 attempt_time TEXT,
                 error TEXT
             )
@@ -96,10 +97,18 @@ class CrawlerState:
         """, (url, depth, now()))
         self.conn.commit()
 
-    def log_attempt(self, sid, url, depth, attempt, status, duration, error):
+    def log_attempt(self, sid, url, depth, attempt, status, fetch_duration, error):
         self.conn.execute("""
-            INSERT INTO attempts (sid, url, depth, attempt, status, duration, attempt_time, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (sid, url, depth, attempt, status, float(f'{duration:.3f}'), now(), error))
+            INSERT INTO attempts (sid, url, depth, attempt, status, fetch_duration, attempt_time, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (sid, url, depth, attempt, status, float(f'{fetch_duration:.3f}'), now(), error))
+        self.conn.commit()
+
+    def attempt_update_total_duration(self, sid, url, depth, attempt, total_duration):
+        self.conn.execute("""
+            UPDATE attempts 
+            SET total_duration = ?
+            WHERE sid = ? AND url = ? AND attempt = ?
+        """, (float(f'{total_duration:.3f}'), sid, url, attempt))
         self.conn.commit()
 
     def peek_url(self):

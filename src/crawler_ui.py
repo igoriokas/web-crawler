@@ -34,9 +34,10 @@ with state.CrawlerState():
 
 def get_all_pages():
     with sqlite3.connect(cfg.DB_PATH) as conn:
-        pages = pd.read_sql("SELECT * FROM pages", conn)
-        words = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
-        return pages, words
+        pages    = pd.read_sql("SELECT * FROM pages", conn)
+        words    = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
+        attempts = pd.read_sql("SELECT attempt, fetch_duration, total_duration FROM attempts WHERE status = 200", conn)
+        return pages, words, attempts
 
 def draw_progress_bar(df, ax):    
     # counts
@@ -66,7 +67,7 @@ def draw_progress_bar(df, ax):
 
 # Create the Tkinter window
 root = tk.Tk()
-root.title("My Web Crawler")
+root.title(f"Crawling {cfg.START_URL} -> {cfg.WORKDIR} (max_depth: {cfg.MAX_DEPTH}, max_attempts: {cfg.MAX_ATTEMPTS})")
 root.geometry("1200x900")
 
 # Create a Canvas widget and add it to Tkinter
@@ -157,13 +158,19 @@ def textbox_append_text(tb:tk.Text, text:str):
 logfile = open(cfg.LOG_FILE, "r")
 
 def update_plot():
-    pages, words = get_all_pages()
+    pages, words, attemps = get_all_pages()
+    attempts_means = attemps.mean().round(3) if len(attemps) > 0 else None
     draw_progress_bar(pages, ax)
     canvas.draw()
 
     er = pages.groupby('error')['sid'].count().to_frame().sort_values('sid', ascending=False).reset_index()
-    er = er.rename(columns={'sid':'count'})
-    textbox_set_text(t1, f"ERROR COUNTS:\n\n{er.to_string(index=False, header=False)}")
+    if len(er) > 0:
+        er = er.rename(columns={'sid':'count'})
+        er = er.to_string(index=False, header=False)
+    else:
+        er = 'no errors'
+    textbox_set_text(t1, f"ERROR COUNTS:\n\n{er}")
+    textbox_append_text(t1,  '\n\n-----------------------------------------------------------')
     textbox_append_text(t1, f"\n\nIs word count from disk identical to DB word count - {words.equals(word_counter.sum_counters_folder_df(f'{cfg.WORKDIR}/words'))}")
 
     textbox_set_text(t2, f"TOP WORD COUNTS:\n\n{words[:100].to_string(index=False, header=False)}")
@@ -171,11 +178,17 @@ def update_plot():
     files_cnt_text = 'FILES PRODUCED:\n\n'
     files_cnt_text += f'  pages: {len(glob.glob(f'{cfg.WORKDIR}/pages/**/*.*', recursive=True))}\n'
     files_cnt_text += f'   text: {len(glob.glob(f'{cfg.WORKDIR}/text/**/*.*',  recursive=True))}\n'
-    files_cnt_text += f'   word: {len(glob.glob(f'{cfg.WORKDIR}/words/**/*.*', recursive=True))}\n'
+    files_cnt_text += f'  words: {len(glob.glob(f'{cfg.WORKDIR}/words/**/*.*', recursive=True))}\n'
+    files_cnt_text += '\n\n'
+    if attempts_means is not None:
+        files_cnt_text += 'STATISTICS (per page):\n\n'
+        files_cnt_text += f'  mean attempts:       {float(attempts_means['attempt']):.1f}\n\n'
+        files_cnt_text += f'  mean fetch duration: {float(attempts_means['fetch_duration']):.3f} secs\n'
+        files_cnt_text += f'  mean total duration: {float(attempts_means['total_duration']):.3f} secs\n'
     textbox_set_text(t3, files_cnt_text) 
 
     textbox_append_text(text_box, logfile.read())
-    root.after(1000, update_plot)
+    root.after(2000, update_plot)
 
 # Start crawler thread
 thread = threading.Thread(target=crawler_cli.main, args=(), daemon=True)

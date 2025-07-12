@@ -2,6 +2,7 @@ import argparse
 import json
 import yaml
 import os
+import shutil
 import logging.config
 from urllib.parse import urlparse
 from pathlib import Path
@@ -69,6 +70,7 @@ def argparse_and_init(description):
     parser.add_argument("-a", dest='max_attempts', type=int, default=2, help="Max allowed attempts (default: %(default)s)")
     parser.add_argument("-no-ui", action="store_true", help="Run in non-UI mode (headless)")
     parser.add_argument("-e", dest='inject_errors', action="store_true", help="Enable random error injection (testing)")
+    parser.add_argument("-p", dest='purge', action="store_true", help="Purge workdir to start from scratch (advanced)")
     args = parser.parse_args()
 
     NO_UI = args.no_ui
@@ -77,6 +79,14 @@ def argparse_and_init(description):
     WORKDIR = args.workdir
     START_URL = args.url
     MAX_DEPTH = args.max_depth
+
+    if args.purge and os.path.exists(WORKDIR):
+        try:
+            input('WARNING: purging workdir will delete all previously downloaded content, press Enter to continue ...')
+        except KeyboardInterrupt:
+            print(' EXIT')
+            exit()
+        shutil.rmtree(WORKDIR)        
 
     # Apply logging config
     os.makedirs(WORKDIR, exist_ok=True)
