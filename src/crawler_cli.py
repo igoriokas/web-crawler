@@ -273,7 +273,7 @@ def save_word_counts_json(filename:str, word_counter:Counter):
 
 def crawl_completed(state):
     try:
-        word_counter.save_final_count(state)
+        word_counter.save_total_count(state)
         logger.info(f'CRAWL COMPLETED: {cfg.START_URL} -> {cfg.WORKDIR} (depth {cfg.MAX_DEPTH} hops)')
         logger.info(f'Original web pages stored in:  {cfg.WORKDIR}/pages/')
         logger.info(f'Pages in plain text stored in: {cfg.WORKDIR}/text/')
@@ -329,6 +329,7 @@ def crawler_loop():
                     words = word_counter.count_words(text)
                     save_word_counts_json(filepath, words)
                     state.update_word_counts_mark_success(words, url)
+                    word_counter.save_total_count(state)
                 except RequestException as e:   # mark as falure and move to next page
                     state.mark_failure(url, utils.etos(e))
                     logger.error(f"{utils.etos(e)}")
