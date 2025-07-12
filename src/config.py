@@ -31,6 +31,12 @@ DEFAULT_HEADERS = {
     'Accept': 'text/html, text/plain'
 }
 
+# Maximum number of allowed attempts
+MAX_ATTEMPTS = 2
+
+# Enable simulated errors injections, for testing
+INJECT_ERRORS = False
+
 # --------------------------------------------------------
 #   Derived config (DO NOT MODIFY) 
 #   Those settings are loaded or derived from command line arguments
@@ -53,20 +59,24 @@ LOCK_FILE = DB_PATH = LOG_FILE = COUNTS_FILE = None
 NO_UI = None
 
 def argparse_and_init(description):
-    global START_URL, WORKDIR, MAX_DEPTH, PROTOCOL, DOMAIN, PRODOMAIN, LOCK_FILE, DB_PATH, LOG_FILE, NO_UI, COUNTS_FILE
+    global START_URL, WORKDIR, MAX_DEPTH, MAX_ATTEMPTS, PROTOCOL, DOMAIN, PRODOMAIN, LOCK_FILE, DB_PATH, LOG_FILE, NO_UI, COUNTS_FILE, INJECT_ERRORS
 
     # Parse program arguments
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("url", type=str, help="Starting URL and scope (https://quotes.toscrape.com)")
     parser.add_argument("workdir", type=str, help="Working directory, for output and state (data-quotes)")
-    parser.add_argument("-d", "--depth", type=int, default=1, help="Max crawl depth (default: %(default)s)")
+    parser.add_argument("-d", dest='max_depth', type=int, default=1, help="Max crawl depth (default: %(default)s)")
+    parser.add_argument("-a", dest='max_attempts', type=int, default=2, help="Max allowed attempts (default: %(default)s)")
     parser.add_argument("-no-ui", action="store_true", help="Run in non-UI mode (headless)")
+    parser.add_argument("-e", dest='inject_errors', action="store_true", help="Enable random error injection (testing)")
     args = parser.parse_args()
 
     NO_UI = args.no_ui
+    INJECT_ERRORS = args.inject_errors
+    MAX_ATTEMPTS = args.max_attempts
     WORKDIR = args.workdir
     START_URL = args.url
-    MAX_DEPTH = args.depth
+    MAX_DEPTH = args.max_depth
 
     # Apply logging config
     os.makedirs(WORKDIR, exist_ok=True)
@@ -81,13 +91,19 @@ def argparse_and_init(description):
         with open(cfg, 'r') as f:
             oldcfg = json.load(f)
             START_URL = oldcfg['url']
-            MAX_DEPTH = oldcfg['depth']
-        logger.info(f"RESUME PREVIOUS CRAWL: {START_URL} -> {WORKDIR} (max depth: {MAX_DEPTH} hops)")
+            MAX_DEPTH = oldcfg['max_depth']
+        logger.info(f"RESUME PREVIOUS CRAWL: {START_URL} -> {WORKDIR} (max_depth: {MAX_DEPTH}, max_attempts: {MAX_ATTEMPTS})")
     else:   # start new crawl
         with open(cfg, 'w') as f:
             json.dump(vars(args), f, indent=2)
-        logger.info(f"START NEW CRAWL: {START_URL} -> {WORKDIR} (max depth: {MAX_DEPTH} hops)")
-    input('Press Enter to continue ...')
+        logger.info(f"START NEW CRAWL: {START_URL} -> {WORKDIR} (max_depth: {MAX_DEPTH}, max_attempts: {MAX_ATTEMPTS})")
+    try:
+        if INJECT_ERRORS:
+            logger.info(f'RANDOM ERROR INJECTION ENABLED')
+        input('Press Enter to continue ...')
+    except KeyboardInterrupt:
+        print(' EXIT')
+        exit()
 
 
     _START_URL_PARSED = urlparse(START_URL)

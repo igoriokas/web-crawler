@@ -123,6 +123,19 @@ The lock is specific to the configured **working directory**. That means:
 
 This mechanism ensures safe, singleton operation **per crawl session**, while supporting concurrent execution across separate targets.
 
+### Testing and Error Injection
+
+To test robustness and error handling, the crawler includes controlled random error injections.
+This feature is enabled via the `-e` command-line flag.
+
+When error injection is active, the system may randomly simulate:
+- Network errors (`ConnectionError`, `Timeout`)
+- HTTP error responses with random status codes
+- Page parsing failures
+- File write errors (e.g., `FileNotFoundError`, disk full)
+
+These simulations help verify that retries, fallbacks, and logging behave correctly under failure conditions.
+
 ## UI
 some explanations about the UI ...
 

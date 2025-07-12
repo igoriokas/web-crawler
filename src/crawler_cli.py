@@ -11,7 +11,6 @@ Web crawler module.
 
 import os
 import time
-import random
 import requests
 from requests import RequestException
 from urllib.parse import urljoin, urlparse
@@ -86,7 +85,6 @@ def extract_links(state, url, type, body, depth):
     - Filters links using is_valid_link.
     - Normalizes to absolute URLs and removes fragments and trailing slashes.
     - Enqueues valid internal links for further crawling.
-    - Randomly simulates a parsing error (5% chance) to test error handling.
     - Traverses website hierarchy in a breadth-first search (BFS) manner
       to improve page turnover speed and reduce memory usage compared to depth-first search (DFS).
 
@@ -101,10 +99,8 @@ def extract_links(state, url, type, body, depth):
         PageException: On any parsing or processing error.
     """
     try:
-        if random.random() < 0.05:
-            raise RuntimeError('simulated page parsing error')
-
         if body and (type == 'text/html') and (depth < cfg.MAX_DEPTH):
+            utils.inject_page_parsing_error()
             soup = BeautifulSoup(body, "html.parser")
             for a in soup.find_all("a", href=True):
                 href = a['href']
@@ -321,7 +317,7 @@ def crawler_loop():
                 try:
                     logger.info('')
                     id, url, depth, attempts = row
-                    type, body = fetch_url(state, id, url, depth, attempts)
+                    type, body = fetch_url(state, id, url, depth, attempts, max_attempts=cfg.MAX_ATTEMPTS)
                     extract_links(state, url, type, body, depth)
                     filepath = url_to_filepath(url, type)
                     save_file_raw(filepath, body)
