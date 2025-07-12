@@ -267,10 +267,16 @@ def save_word_counts_json(filename:str, word_counter:Counter):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(word_counter, f, ensure_ascii=False, indent='')
 
+import pandas as pd
 def crawl_completed(state):
     try:
         word_counter.save_total_count(state)
         logger.info(f'CRAWL COMPLETED: {cfg.START_URL} -> {cfg.WORKDIR} (depth {cfg.MAX_DEPTH} hops)')
+        
+        # print stats
+        counts = pd.read_sql("SELECT * FROM pages", state.conn)['status'].value_counts()
+        logger.info(f'{counts.get('visited', 0)} pages downloaded, {counts.get('failed', 0)} failures')
+
         logger.info(f'Original web pages stored in:  {cfg.WORKDIR}/pages/')
         logger.info(f'Pages in plain text stored in: {cfg.WORKDIR}/text/')
         logger.info(f'Final word counts stored in:   {cfg.COUNTS_FILE}')

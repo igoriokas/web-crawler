@@ -45,7 +45,7 @@ def draw_progress_bar(df, ax):
     failed = counts.get('failed', 0)
     queued = counts.get('queued', 0)
     done = visited + failed
-    total = done + queued or 1 # to avoid division by zero at start
+    total = (done + queued) or 1 # to avoid division by zero at start
     
     ax.clear()
     ax.barh(0, visited, color='green', label=f'Visited: {visited} ({visited/total:.0%})')
