@@ -271,6 +271,18 @@ def save_word_counts_json(filename:str, word_counter:Counter):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(word_counter, f, ensure_ascii=False, indent='')
 
+def crawl_completed(state):
+    try:
+        word_counter.save_final_count(state)
+        logger.info(f'CRAWL COMPLETED: {cfg.START_URL} -> {cfg.WORKDIR} (depth {cfg.MAX_DEPTH} hops)')
+        logger.info(f'Original web pages stored in:  {cfg.WORKDIR}/pages/')
+        logger.info(f'Pages in plain text stored in: {cfg.WORKDIR}/text/')
+        logger.info(f'Final word counts stored in:   {cfg.COUNTS_FILE}')
+    except Exception as e:
+        logger.critical(f"{utils.etos(e)}")
+        logger.critical(f"Fix environment and restart the crawler")
+        raise e
+
 
 def crawler_loop():
     """
@@ -303,9 +315,8 @@ def crawler_loop():
 
                 row = state.peek_url()
                 if not row:
-                    url, depth = state.start_url()
-                    logger.info(f'CRAWL COMPLETED: {url} -> {cfg.WORKDIR} (depth {cfg.MAX_DEPTH} hops)')
-                    return
+                    crawl_completed(state)
+                    exit()
 
                 try:
                     logger.info('')
@@ -322,7 +333,7 @@ def crawler_loop():
                     state.mark_failure(url, utils.etos(e))
                     logger.error(f"{utils.etos(e)}")
                 except Exception as e:    # stop programm 
-                    state.decrease_attempt(url) # don't count the attempt
+                    state.decrease_attempt(url) # don't count last attempt
                     logger.critical(f"{utils.etos(e)}")
                     logger.critical(f"Fix environment and restart the crawler")
                     return

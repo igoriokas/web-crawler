@@ -48,10 +48,12 @@ START_URL = None
 # Limit on link-following depth
 MAX_DEPTH = None
 
-PROTOCOL = DOMAIN = PRODOMAIN = LOCK_FILE = DB_PATH = LOGFILE = NO_UI = None
+PROTOCOL = DOMAIN = PRODOMAIN = None
+LOCK_FILE = DB_PATH = LOG_FILE = COUNTS_FILE = None
+NO_UI = None
 
 def argparse_and_init(description):
-    global START_URL, WORKDIR, MAX_DEPTH, PROTOCOL, DOMAIN, PRODOMAIN, LOCK_FILE, DB_PATH, LOGFILE, NO_UI
+    global START_URL, WORKDIR, MAX_DEPTH, PROTOCOL, DOMAIN, PRODOMAIN, LOCK_FILE, DB_PATH, LOG_FILE, NO_UI, COUNTS_FILE
 
     # Parse program arguments
     parser = argparse.ArgumentParser(description=description)
@@ -95,8 +97,8 @@ def argparse_and_init(description):
 
     LOCK_FILE = f'{WORKDIR}/lock'
     DB_PATH = f'{WORKDIR}/state.db'
-    LOGFILE = f'{WORKDIR}/log.log'
-
+    LOG_FILE = f'{WORKDIR}/log.log'
+    COUNTS_FILE = f'{WORKDIR}/word_counts.json'
 
 
 

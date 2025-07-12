@@ -13,6 +13,7 @@ import re
 import pandas as pd
 from collections import Counter
 
+import config as cfg
 import exceptions
 
 def count_words(text):
@@ -80,3 +81,8 @@ def sum_counters_folder_df(folder:str):
     totals, _ = sum_counters_folder(folder)
     return pd.DataFrame(totals.items(), columns=['word','count']).sort_values(['count', 'word'], ascending=[False, True]).reset_index(drop=True)
 
+def save_final_count(state):
+    words = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", state.conn)
+    words = dict(zip(words['word'], words['count']))
+    with open(cfg.COUNTS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(words, f, ensure_ascii=False, indent=2)

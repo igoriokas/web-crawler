@@ -29,7 +29,30 @@ The main goal is to count the instances of each word in the text retrieved from 
 ```bash
   python crawler.py https://quotes.toscrape.com ./data-quotes -d 2
 ```
+
 * By default crawler starts in UI mode, for CLI mode use `--no-ui` flag
+
+* Outcomes\
+After the crawl completes, the following output files and directories will be generated in the working directory:
+
+  - **Original HTML pages**  
+  Stored in: `<workdir>/pages/`  
+  Contains the raw HTML content of all crawled pages.
+
+  - **Plain text versions**  
+  Stored in: `<workdir>/text/`  
+  Each file contains the extracted visible text from its corresponding HTML page.
+
+  - **Aggregated word counts**  
+  Stored in: `<workdir>/word_counts.json`  
+  A JSON dictionary of total word frequencies across all crawled pages, in the format:
+    ```json
+    {
+      "hello": 12,
+      "world": 7
+    }
+    ```
+    The words are sorted by descending count.
 
 #### to delete the conda environment:
   - `conda deactivate`

@@ -154,7 +154,7 @@ def textbox_append_text(tb:tk.Text, text:str):
     tb.config(state='disabled')
 
 
-logfile = open(cfg.LOGFILE, "r")
+logfile = open(cfg.LOG_FILE, "r")
 
 def update_plot():
     pages, words = get_all_pages()
