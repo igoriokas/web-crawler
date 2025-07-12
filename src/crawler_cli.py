@@ -17,6 +17,7 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import logging
 import json
+import pandas as pd
 from collections import Counter
 
 # my imports
@@ -267,8 +268,11 @@ def save_word_counts_json(filename:str, word_counter:Counter):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(word_counter, f, ensure_ascii=False, indent='')
 
-import pandas as pd
+
 def crawl_completed(state):
+    """
+    Finalizes the crawl session by saving word counts, logging summary stats, and printing output file locations.
+    """
     try:
         word_counter.save_total_count(state)
         logger.info(f'CRAWL COMPLETED: {cfg.START_URL} -> {cfg.WORKDIR} (depth {cfg.MAX_DEPTH} hops)')
@@ -317,8 +321,7 @@ def crawler_loop():
 
                 row = state.peek_url()
                 if not row:
-                    crawl_completed(state)
-                    exit()
+                    return crawl_completed(state)
 
                 try:
                     logger.info('')
