@@ -45,25 +45,21 @@ The main goal is to count the instances of each word in the text retrieved from 
 
 After the crawl completes, the following output files and directories will be generated in the working directory:
 
-- **Original HTML pages**
-  Stored in: `<workdir>/pages/`
+- **Original HTML pages**\
+  Stored in: `<workdir>/pages/`\
   Contains the raw HTML content of all crawled pages.
-- **Plain text versions**
-  Stored in: `<workdir>/text/`
+
+- **Plain text versions**\
+  Stored in: `<workdir>/text/`\
   Each file contains the extracted visible text from its corresponding HTML page.
-- **Aggregated word counts**
-  Stored in: `<workdir>/word_counts.json`
-  A JSON dictionary of total word frequencies across all crawled pages, in the format:
 
-  ```json
-  {
-    "hello": 12,
-    "world": 7
-  }
-  ```
+- **Aggregated word counts**\
+  Stored in: `<workdir>/word_counts.json`\
+  A JSON dictionary of total word frequencies across all crawled pages, sorted by descending count.\
+  see sample wile at [doc/sample/word_counts.txt](doc/sample/word_counts.json)
 
-  The words are sorted by descending count.
-- **Crawl report summary**Stored in: `<workdir>/report.txt`Report file contains a complete summary of a web crawling session, including:
+- **Crawl report summary**\
+  Stored in: `<workdir>/report.txt`Report file contains a complete summary of a web crawling session, including:
 
   - Crawl parameters
   - Progress statistics (pages downloaded, failed, or pending)
