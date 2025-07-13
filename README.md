@@ -75,7 +75,7 @@ After the crawl completes, the following output files and directories will be ge
 
 ## UI screenshot:
 
-![](doc/Screenshot.png)
+![](doc/Screenshot1.png)
 
 ## Architecture
 
