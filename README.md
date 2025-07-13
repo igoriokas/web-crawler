@@ -73,9 +73,11 @@ After the crawl completes, the following output files and directories will be ge
   - `conda deactivate`
   - `conda remove --name crawler --all -y`
 
-## UI screenshot:
-
+## UI:
 ![](doc/Screenshot1.png)
+
+A simple UI for real-time tracking of crawl progress, errors, statistics, and logs.
+It presents the same information found in report.txt, but in a graphical and live-updating format.
 
 ## Architecture
 
@@ -167,12 +169,4 @@ some explanations about the UI ...
 * Word Extraction Improvements
 	- Use more sophisticated tokenization (e.g., nltk or spaCy) for better word extraction.
 	- Filter out stop words and apply stemming or lemmatization for cleaner data.
-* Write proper unit tests.
-
-
-## TODO
-* explain error injection
-* explain data flow
-* explain word count validation (DB vs FS)
-* think about more KPI to add
-* Submit a report of the analysis and recommendation ???
+* Implement proper unit tests.
