@@ -58,7 +58,7 @@ def inject_page_parsing_error():
 
 
 def file_write(path:str, content:str):
-    if _random_or_one() < 0.005:
+    if _random_or_one() < 0.000:
         raise random.choice([
             FileNotFoundError('simulated FileNotFoundError'),
             OSError('simulated DiskIsFull'),

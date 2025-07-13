@@ -1,0 +1,99 @@
+-----------------------------------------------------------
+
+CRAWL https://books.toscrape.com/index.html -> data-books (max_depth: 2, max_attempts: 2)
+
+CRAWL COMPLETED
+
+Original web pages stored in:  data-books/pages/ 
+Pages in plain text stored in: data-books/text/  
+Final word counts stored in:   data-books/word_counts.json    
+
+
+-----------------------------------------------------------
+PROGRESS STATS:
+
+     517 pages downloaded
+      27 pages failed
+       0 pages still queued
+
+
+-----------------------------------------------------------
+FILES PRODUCED:
+
+  pages/: 517
+   text/: 517
+  words/: 517
+
+
+STATISTICS (per page):
+
+  mean attempts:       1.1
+
+  mean fetch duration: 0.618 secs
+  mean total duration: 0.883 secs
+
+
+-----------------------------------------------------------
+ERROR COUNTS:
+
+          PageException(Max attempts reached) 9
+PageException(Non-Retryable HTTP error [403]) 7
+PageException(Non-Retryable HTTP error [501]) 6
+PageException(Non-Retryable HTTP error [404]) 5
+
+
+-----------------------------------------------------------
+TOP(50) WORD COUNTS:
+
+      the 8592
+       to 7528
+       in 6518
+        â 5980
+      and 5777
+       of 4983
+        a 4485
+    stock 4312
+      add 3482
+   basket 3395
+    books 2115
+       is 1962
+        s 1831
+      for 1531
+  product 1374
+      tax 1373
+      you 1095
+     this 1071
+     that 1058
+      her 1049
+   scrape 1034
+     with  999
+    price  922
+available  920
+        0  919
+     love  836
+     have  834
+       we  813
+       on  777
+      his  760
+     from  726
+       it  725
+       no  689
+       as  687
+     more  687
+     home  651
+     were  625
+      she  604
+    being  594
+     here  590
+       an  571
+     real  564
+  meaning  538
+  warning  529
+      new  527
+ assigned  521
+      web  519
+ purposes  518
+ randomly  518
+  website  518
+
+-----------------------------------------------------------

@@ -66,6 +66,8 @@ After the crawl completes, the following output files and directories will be ge
     -	Performance metrics
     -	Error counts and messages, if any
     -	Top(50) word frequencies extracted from the crawled pages
+  
+    see sample report at [doc/report.txt](doc/report.txt)
 
 #### to delete the conda environment:
   - `conda deactivate`
