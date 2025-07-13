@@ -82,7 +82,7 @@ A simple UI for real-time tracking of crawl progress, errors, statistics, and lo
 It presents the same information found in report.txt, but in a graphical and live-updating format.
 
 * notes:
-  - *mean attempts* - average time (secs) taken by successful HTTP fetches only.
+  - *mean attempts* - average number of fetch attempts per page, including both successful and failed pages.
   - *mean fetch duration* - average time (secs) taken by successful HTTP fetches only.
   - *mean total duration* - average end-to-end processing time per successful page, including retries if any; failed pages are excluded.
 

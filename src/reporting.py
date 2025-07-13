@@ -23,7 +23,7 @@ class Reporter():
         self.top_words_text = None
         self.pages = None
         self.words = None
-        self.attempts = None
+        self.durations = None
 
     def refresh(self, freshness:float):
         if (time.time() - self.updated_at) > freshness:
@@ -33,9 +33,10 @@ class Reporter():
 
     def read_db(self):
         with sqlite3.connect(cfg.DB_PATH) as conn:
-            self.pages    = pd.read_sql("SELECT * FROM pages", conn)
-            self.words    = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
-            self.attempts = pd.read_sql("SELECT attempt, fetch_duration, total_duration FROM attempts WHERE status = 200", conn)
+            self.pages     = pd.read_sql("SELECT * FROM pages", conn)
+            self.words     = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
+            self.attempts  = pd.read_sql("SELECT sid, attempt FROM attempts", conn)
+            self.durations = pd.read_sql("SELECT attempt, fetch_duration, total_duration FROM attempts WHERE status = 200", conn)
 
         counts = self.pages['status'].value_counts()
         self.visited = counts.get('visited', 0)
@@ -47,7 +48,8 @@ class Reporter():
 
     def prepare_report(self):
         self.read_db()
-        attempts_means = self.attempts.mean() if len(self.attempts) > 0 else None
+        mean_attempts = float(self.attempts.groupby('sid').count().mean()['attempt'])
+        duration_means = self.durations.mean() if len(self.durations) > 0 else None
 
         er = self.pages.groupby('error')['sid'].count().to_frame().sort_values('sid', ascending=False).reset_index()
         if len(er) > 0:
@@ -65,11 +67,11 @@ class Reporter():
         self.files_cnt_text += f'   text/: {len(glob.glob(f'{cfg.WORKDIR}/text/**/*.*',  recursive=True))}\n'
         self.files_cnt_text += f'  words/: {len(glob.glob(f'{cfg.WORKDIR}/words/**/*.*', recursive=True))}\n'
         self.files_cnt_text += '\n\n'
-        if attempts_means is not None:
+        if duration_means is not None:
             self.files_cnt_text += 'STATISTICS (per page):\n\n'
-            self.files_cnt_text += f'  mean attempts:       {float(attempts_means['attempt']):.1f}\n\n'
-            self.files_cnt_text += f'  mean fetch duration: {float(attempts_means['fetch_duration']):.3f} secs\n'
-            self.files_cnt_text += f'  mean total duration: {float(attempts_means['total_duration']):.3f} secs\n'
+            self.files_cnt_text += f'  mean attempts:       {mean_attempts:.2f}\n\n'
+            self.files_cnt_text += f'  mean fetch duration: {float(duration_means['fetch_duration']):.3f} secs\n'
+            self.files_cnt_text += f'  mean total duration: {float(duration_means['total_duration']):.3f} secs\n'
 
         self.top_words_text = f'TOP(50) WORD COUNTS:\n\n{self.words[:50].to_string(index=False, header=False)}'            
         self.updated_at = time.time()
