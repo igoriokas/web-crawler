@@ -75,7 +75,7 @@ After the crawl completes, the following output files and directories will be ge
   - `conda deactivate`
   - `conda remove --name crawler --all -y`
 
-## UI:
+## UI
 ![](doc/Screenshot1.png)
 
 A simple UI for real-time tracking of crawl progress, errors, statistics, and logs.\
@@ -159,9 +159,6 @@ When error injection is active, the system may randomly simulate:
 - File write errors (e.g., `FileNotFoundError`, disk full)
 
 These simulations help verify that retries, fallbacks, and logging behave correctly under failure conditions.
-
-## UI
-some explanations about the UI ...
 
 ## Limitations
 
