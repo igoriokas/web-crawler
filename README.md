@@ -45,21 +45,18 @@ The main goal is to count the instances of each word in the text retrieved from 
 
 After the crawl completes, the following output files and directories will be generated in the working directory:
 
-- **Original HTML pages**\
-  Stored in: `<workdir>/pages/`\
+- **Original HTML pages** - stored in `<workdir>/pages/`\
   Contains the raw HTML content of all crawled pages.
 
-- **Plain text versions**\
-  Stored in: `<workdir>/text/`\
+- **Plain text versions** - stored in `<workdir>/text/`\
   Each file contains the extracted visible text from its corresponding HTML page.
 
-- **Aggregated word counts**\
-  Stored in: `<workdir>/word_counts.json`\
+- **Aggregated word counts** - stored in `<workdir>/word_counts.json`\
   A JSON dictionary of total word frequencies across all crawled pages, sorted by descending count.\
-  see sample wile at [doc/sample/word_counts.txt](doc/sample/word_counts.json)
+  example at [doc/sample/word_counts.txt](doc/sample/word_counts.json)
 
-- **Crawl report summary**\
-  Stored in: `<workdir>/report.txt`Report file contains a complete summary of a web crawling session, including:
+- **Crawl report summary** - stored in `<workdir>/report.txt`\
+  Report file contains a complete summary of a web crawling session, including:
 
   - Crawl parameters
   - Progress statistics (pages downloaded, failed, or pending)
@@ -68,7 +65,7 @@ After the crawl completes, the following output files and directories will be ge
   - Error counts and messages, if any
   - Top(50) word frequencies extracted from the crawled pages
 
-  see sample report at [doc/sample/report.txt](doc/sample/report.txt)
+  example at [doc/sample/report.txt](doc/sample/report.txt)
 
 #### To delete the conda environment:
 
