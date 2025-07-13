@@ -78,8 +78,13 @@ After the crawl completes, the following output files and directories will be ge
 ## UI:
 ![](doc/Screenshot1.png)
 
-A simple UI for real-time tracking of crawl progress, errors, statistics, and logs.
+A simple UI for real-time tracking of crawl progress, errors, statistics, and logs.\
 It presents the same information found in report.txt, but in a graphical and live-updating format.
+
+* notes:
+  - *mean attempts* - average time (secs) taken by successful HTTP fetches only.
+  - *mean fetch duration* - average time (secs) taken by successful HTTP fetches only.
+  - *mean total duration* - average end-to-end processing time per successful page, including retries if any; failed pages are excluded.
 
 ## Architecture
 
@@ -172,3 +177,4 @@ some explanations about the UI ...
 	- Use more sophisticated tokenization (e.g., nltk or spaCy) for better word extraction.
 	- Filter out stop words and apply stemming or lemmatization for cleaner data.
 * Implement proper unit tests.
+* Implement more visually appealing HTML report.
