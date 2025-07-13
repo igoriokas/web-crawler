@@ -56,11 +56,11 @@ START_URL = None
 MAX_DEPTH = None
 
 PROTOCOL = DOMAIN = PRODOMAIN = None
-LOCK_FILE = DB_PATH = LOG_FILE = COUNTS_FILE = None
+LOCK_FILE = DB_PATH = LOG_FILE = COUNTS_FILE = REPORT_FILE = None
 NO_UI = None
 
 def argparse_and_init(description):
-    global START_URL, WORKDIR, MAX_DEPTH, MAX_ATTEMPTS, PROTOCOL, DOMAIN, PRODOMAIN, LOCK_FILE, DB_PATH, LOG_FILE, NO_UI, COUNTS_FILE, INJECT_ERRORS
+    global START_URL, WORKDIR, MAX_DEPTH, MAX_ATTEMPTS, PROTOCOL, DOMAIN, PRODOMAIN, LOCK_FILE, DB_PATH, LOG_FILE, NO_UI, COUNTS_FILE, REPORT_FILE, INJECT_ERRORS
 
     # Parse program arguments
     parser = argparse.ArgumentParser(description=description)
@@ -125,6 +125,7 @@ def argparse_and_init(description):
     DB_PATH = f'{WORKDIR}/state.db'
     LOG_FILE = f'{WORKDIR}/log.log'
     COUNTS_FILE = f'{WORKDIR}/word_counts.json'
+    REPORT_FILE = f'{WORKDIR}/report.txt'
 
 
 

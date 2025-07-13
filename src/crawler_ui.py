@@ -1,4 +1,5 @@
 import tkinter as tk
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
@@ -7,7 +8,6 @@ import time
 import glob
 import word_counter
 import threading
-import matplotlib.pyplot as plt
 import word_counter
 import logging
 
@@ -16,6 +16,7 @@ import config as cfg
 import crawler_cli
 import lockfile
 import state
+import reporting
 
 if __name__ == "__main__": # starting directly from crawler_ui.py
     cfg.argparse_and_init('crawler-ui')
@@ -28,42 +29,32 @@ if lockfile.LockFile().is_locked():
     print(f"Another crawler process is already running in {cfg.WORKDIR}, EXIT") # intentionally not logging
     exit()
 
+
 # create DB tables if starting from scratch, for UI display
 with state.CrawlerState():
     pass
 
-def get_all_pages():
-    with sqlite3.connect(cfg.DB_PATH) as conn:
-        pages    = pd.read_sql("SELECT * FROM pages", conn)
-        words    = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
-        attempts = pd.read_sql("SELECT attempt, fetch_duration, total_duration FROM attempts WHERE status = 200", conn)
-        return pages, words, attempts
+logfile = open(cfg.LOG_FILE, "r")
 
-def draw_progress_bar(df, ax):    
-    # counts
-    counts = df['status'].value_counts()
-    visited = counts.get('visited', 0)
-    failed = counts.get('failed', 0)
-    queued = counts.get('queued', 0)
-    done = visited + failed
-    total = (done + queued) or 1 # to avoid division by zero at start
-    
+
+def draw_progress_bar(ax, canvas, r):    
     ax.clear()
-    ax.barh(0, visited, color='green', label=f'Visited: {visited} ({visited/total:.0%})')
-    ax.barh(0, failed, left=visited, color='red', label=f'Failed : {failed} ({failed/total:.0%})')
-    ax.barh(0, queued, left=done, color='orange', label=f'Queued : {queued} ({queued/total:.0%})')
+    ax.barh(0, r.visited, color='green', label=f'Visited: {r.visited} ({r.visited/r.total:.0%})')
+    ax.barh(0, r.failed, left=r.visited, color='red', label=f'Failed : {r.failed} ({r.failed/r.total:.0%})')
+    ax.barh(0, r.queued, left=r.done, color='orange', label=f'Queued : {r.queued} ({r.queued/r.total:.0%})')
 
-    ax.set_title(f"Crawling Progress: {done} of {total} pages", fontsize=12, pad=5)
+    ax.set_title(f"Crawling Progress: {r.done} of {r.total} pages", fontsize=12, pad=5)
     ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.5), ncol=3, fontsize=10, frameon=False)
-    ax.set_xlim(0, total)
+    ax.set_xlim(0, r.total)
     ax.set_yticks([])
     ax.set_xticks([])
     ax.set_frame_on(False)
  
     plt.subplots_adjust(bottom=0.3)
     plt.tight_layout()
-    # plt.show()
-    return queued
+
+    canvas.draw()
+    return
 
 # Create the Tkinter window
 root = tk.Tk()
@@ -73,8 +64,7 @@ root.geometry("1200x900")
 # Create a Canvas widget and add it to Tkinter
 fig, ax = plt.subplots(figsize=(8, 1.5), dpi=50)
 canvas = FigureCanvasTkAgg(fig, master=root)
-draw_progress_bar(get_all_pages()[0], ax)
-canvas.draw()
+draw_progress_bar(ax, canvas, crawler_cli.reporter.prepare_report())
 canvas.get_tk_widget().pack(fill=tk.X, expand=None, padx=10, pady=10)
 
 
@@ -155,40 +145,18 @@ def textbox_append_text(tb:tk.Text, text:str):
     tb.config(state='disabled')
 
 
-logfile = open(cfg.LOG_FILE, "r")
-
 def update_plot():
-    pages, words, attemps = get_all_pages()
-    attempts_means = attemps.mean().round(3) if len(attemps) > 0 else None
-    draw_progress_bar(pages, ax)
-    canvas.draw()
-
-    er = pages.groupby('error')['sid'].count().to_frame().sort_values('sid', ascending=False).reset_index()
-    if len(er) > 0:
-        er = er.rename(columns={'sid':'count'})
-        er = er.to_string(index=False, header=False)
-    else:
-        er = 'no errors'
-    textbox_set_text(t1, f"ERROR COUNTS:\n\n{er}")
-    textbox_append_text(t1,  '\n\n-----------------------------------------------------------')
-    textbox_append_text(t1, f"\n\nIs word count from disk identical to DB word count - {words.equals(word_counter.sum_counters_folder_df(f'{cfg.WORKDIR}/words'))}")
-
-    textbox_set_text(t2, f"TOP WORD COUNTS:\n\n{words[:100].to_string(index=False, header=False)}")
-
-    files_cnt_text = 'FILES PRODUCED:\n\n'
-    files_cnt_text += f'  pages: {len(glob.glob(f'{cfg.WORKDIR}/pages/**/*.*', recursive=True))}\n'
-    files_cnt_text += f'   text: {len(glob.glob(f'{cfg.WORKDIR}/text/**/*.*',  recursive=True))}\n'
-    files_cnt_text += f'  words: {len(glob.glob(f'{cfg.WORKDIR}/words/**/*.*', recursive=True))}\n'
-    files_cnt_text += '\n\n'
-    if attempts_means is not None:
-        files_cnt_text += 'STATISTICS (per page):\n\n'
-        files_cnt_text += f'  mean attempts:       {float(attempts_means['attempt']):.1f}\n\n'
-        files_cnt_text += f'  mean fetch duration: {float(attempts_means['fetch_duration']):.3f} secs\n'
-        files_cnt_text += f'  mean total duration: {float(attempts_means['total_duration']):.3f} secs\n'
-    textbox_set_text(t3, files_cnt_text) 
-
+    r = crawler_cli.reporter.refresh(2)
+    draw_progress_bar(ax, canvas, r)
+    textbox_set_text(t1, r.errors_text)
+    textbox_set_text(t3, r.files_cnt_text) 
+    textbox_set_text(t2, r.top_words_text)
     textbox_append_text(text_box, logfile.read())
-    root.after(2000, update_plot)
+
+    if r.done > 0 and r.queued == 0:
+        textbox_append_text(t1, '\n\nCRAWL COMPLETED')
+    else:
+        root.after(2000, update_plot)
 
 # Start crawler thread
 thread = threading.Thread(target=crawler_cli.main, args=(), daemon=True)

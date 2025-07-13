@@ -23,11 +23,14 @@ The main goal is to count the instances of each word in the text retrieved from 
 
   options:
     -d           Max crawl depth (default: 1)
+    -a           Max allowed attempts (default: 2)
+    -e           Enable random error injection (testing)
     -no-ui       Run in non-UI mode (headless)
 ```
-* Run example:
+* Run examples:
 ```bash
   python crawler.py https://quotes.toscrape.com ./data-quotes -d 2
+  python crawler.py https://books.toscrape.com/index.html data-books -d 2 -a 3
 ```
 
 * By default crawler starts in UI mode, for CLI mode use `--no-ui` flag
@@ -53,6 +56,16 @@ After the crawl completes, the following output files and directories will be ge
     }
     ```
     The words are sorted by descending count.
+
+  - **Crawl report summary**  
+  Stored in: `<workdir>/report.txt`  
+  Report file contains a complete summary of a web crawling session, including:
+    -	Crawl parameters
+    -	Progress statistics (pages downloaded, failed, or pending)
+    -	Output file counts by type
+    -	Performance metrics
+    -	Error counts and messages, if any
+    -	Top(50) word frequencies extracted from the crawled pages
 
 #### to delete the conda environment:
   - `conda deactivate`

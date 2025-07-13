@@ -26,6 +26,7 @@ import lockfile
 import utils
 from exceptions import RetryableError, PageException
 import word_counter
+import reporting
 from state import CrawlerState
 
 logger = logging.getLogger('crawler.main')
@@ -34,6 +35,8 @@ logger = logging.getLogger('crawler.main')
 # Flags to control crawler from UI
 stop = False    # graceful termination
 pause = False   # temporary pause/resume 
+
+reporter = reporting.Reporter()
 
 # Allowed content-types and mapping to file extention
 content_type_to_ext = {
@@ -113,13 +116,13 @@ def extract_links(state, url, type, body, depth):
         raise PageException(e)
 
 
-def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
+def fetch_url(state, sid, url, depth, attempts, max_attempts=2, base_delay=1):
     """
     Attempts to fetch the content of a URL with retry logic and exponential backoff.
 
     Parameters:
         state: crawler state handler.
-        id (int or str): sequential ID of the URL, used for logging purposes.
+        sid (int or str): sequential ID of the URL, used for logging purposes.
         url (str): The URL to fetch.
         depth (int): The current depth level in the crawl hierarchy.
         attempts (int): Number of previous failed attempts for this URL.
@@ -142,7 +145,7 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
     for attempt in range(attempts+1, max_attempts+1):
         next_wait =  base_delay * (2 ** attempt)
         try:
-            logger.info(f"fetch: id {id} | depth {depth} | attempt {attempt} | {url}")
+            logger.info(f"fetch: sid {sid} | depth {depth} | attempt {attempt} | {url}")
             state.mark_attempt(url)
 
             # FETCH
@@ -152,7 +155,7 @@ def fetch_url(state, id, url, depth, attempts, max_attempts=2, base_delay=1):
 
             content_type = response.headers.get('Content-Type', None)
             logger.debug(f'got: [{response.status_code}] {content_type} | fetch_duration {fetch_duration:.3f} secs')
-            state.log_attempt(id, url, depth, attempt, response.status_code, fetch_duration, None)
+            state.log_attempt(sid, url, depth, attempt, response.status_code, fetch_duration, None)
 
             if response.status_code == 200: # currently only status_code 200 is handled
                 if not response.text:
@@ -287,9 +290,10 @@ def crawl_completed(state):
         counts = pd.read_sql("SELECT * FROM pages", state.conn)['status'].value_counts()
         logger.info(f'{counts.get('visited', 0)} pages downloaded, {counts.get('failed', 0)} failures')
 
-        logger.info(f'Original web pages stored in:  {cfg.WORKDIR}/pages/')
-        logger.info(f'Pages in plain text stored in: {cfg.WORKDIR}/text/')
-        logger.info(f'Final word counts stored in:   {cfg.COUNTS_FILE}')
+        logger.info(f'Original web pages stored in:   {cfg.WORKDIR}/pages/')
+        logger.info(f'Pages in plain text stored in:  {cfg.WORKDIR}/text/')
+        logger.info(f'Final word counts stored in:    {cfg.COUNTS_FILE}')
+        logger.info(f'Crawl report summary stored in: {cfg.REPORT_FILE}')
     except Exception as e:
         logger.critical(f"{utils.etos(e)}")
         logger.critical(f"Fix environment and restart the crawler")
@@ -322,7 +326,7 @@ def crawler_loop():
 
         while not stop:
             try:
-                while pause:
+                while pause and not stop:
                     time.sleep(1)
 
                 row = state.peek_url()
@@ -353,7 +357,8 @@ def crawler_loop():
                     logger.critical(f"{utils.etos(e)}")
                     logger.critical(f"Fix environment and restart the crawler")
                     return
-        
+
+                reporter.write_report_file()
                 time.sleep(cfg.GET_PAGE_DELAY)
             except KeyboardInterrupt as e:
                 logger.critical("Interrupted, stopping ...")
