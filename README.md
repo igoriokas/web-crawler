@@ -7,13 +7,13 @@ The main goal is to count the instances of each word in the text retrieved from 
 
 #### Prepare conda environment:
 
-* Install miniconda3, follow steps in:
+* Install miniconda3, follow steps in:\
   https://www.anaconda.com/docs/getting-started/miniconda/install
-* Create a new conda environment:
+* Create a new conda environment:\
   `conda create -n crawler python=3.13 -y`
-* Activate the conda environment:
+* Activate the conda environment:\
   `conda activate crawler`
-* Install dependencies using pip from requirements.txt:
+* Install dependencies using pip from requirements.txt:\
   `pip install -r requirements.txt`
 
 #### Usage:
@@ -38,12 +38,11 @@ The main goal is to count the instances of each word in the text retrieved from 
   python crawler.py https://quotes.toscrape.com ./data-quotes -d 2
   python crawler.py https://books.toscrape.com/index.html data-books -d 2 -a 3
 ```
-
-* By default crawler starts in UI mode, for CLI mode use `--no-ui` flag
+ - By default crawler starts in UI mode, for CLI mode use `--no-ui` flag
 
 #### Outcomes
 
-After the crawl completes, the following output files and directories will be generated in the working directory:
+During crawling, the following output files and directories will be generated in the working directory:
 
 - **Original HTML pages** - stored in `<workdir>/pages/`\
   Contains the raw HTML content of all crawled pages.
@@ -95,7 +94,7 @@ The crawler uses a breadth-first search (BFS) approach to traverse the website h
   Command-line arguments are parsed to initialize the crawl target URL, working directory, and depth. The working directory defines where all crawler data and state will be stored.
 
 * **Resumable Crawl with SQLite**\
-  Crawl state (pending URLs, visited URLs, depth info) is stored and managed in an SQLite database located in [WORKDIR]/state.db. This allows safe resumption across runs.
+  Crawl state (pending URLs, visited URLs, depth info) is stored and managed in an SQLite database located in `<workdir>/state.db`. This allows safe resumption across runs.
 
 * **Crawling & Fetching**
   - Fetch pages using BFS up to specified depth
@@ -112,14 +111,14 @@ The crawler uses a breadth-first search (BFS) approach to traverse the website h
   - Text: Extracted, cleaned, and stored as plain text files.
 
 * **Storage**
-  - Crawl state managed in:           [WORKDIR]/state.db
-  - Original pages saved in:          [WORKDIR]/pages/
-  - Extracted text saved in:          [WORKDIR]/text/
-  - Page word counts saved in:        [WORKDIR]/words/
-  - Session config saved in:          [WORKDIR]/config.json
-  - Log file managed in:              [WORKDIR]/log.log
-  - Crawl report saved in:            [WORKDIR]/report.txt
-  - Aggregated word counts saved in:  [WORKDIR]/word_counts.json
+  - Crawl state managed in:           `<workdir>/state.db`
+  - Original pages saved in:          `<workdir>/pages/`
+  - Extracted text saved in:          `<workdir>/text/`
+  - Page word counts saved in:        `<workdir>/words/`
+  - Session config saved in:          `<workdir>/config.json`
+  - Log file managed in:              `<workdir>/log.log`
+  - Crawl report saved in:            `<workdir>/report.txt`
+  - Aggregated word counts saved in:  `<workdir>/word_counts.json`
 
 * **Completion**\
   A summary of the crawl (pages processed, failures, etc.) is printed at the end.
