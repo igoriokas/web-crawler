@@ -143,7 +143,7 @@ def fetch_url(state, sid, url, depth, attempts, max_attempts=2, base_delay=1):
         - Logs each attempt with the attempt number, depth, and URL.
     """
     for attempt in range(attempts+1, max_attempts+1):
-        next_wait =  base_delay * (2 ** attempt)
+        next_wait =  base_delay * attempt
         try:
             logger.info(f"fetch: sid {sid} | depth {depth} | attempt {attempt} | {url}")
             state.mark_attempt(url)

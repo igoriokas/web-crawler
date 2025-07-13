@@ -36,7 +36,7 @@ class Reporter():
             self.pages     = pd.read_sql("SELECT * FROM pages", conn)
             self.words     = pd.read_sql("SELECT * FROM words ORDER BY count DESC, word ASC", conn)
             self.attempts  = pd.read_sql("SELECT sid, attempt FROM attempts", conn)
-            self.durations = pd.read_sql("SELECT attempt, fetch_duration, total_duration FROM attempts WHERE status = 200", conn)
+            self.durations = pd.read_sql("SELECT attempt, fetch_duration, total_duration FROM attempts WHERE status = 200 and total_duration > 0", conn)
 
         counts = self.pages['status'].value_counts()
         self.visited = counts.get('visited', 0)
