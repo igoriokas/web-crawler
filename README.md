@@ -148,7 +148,7 @@ The crawler maintains its state in a **SQLite database**, allowing it to persist
 #### Behavior
 
 - URLs are enqueued only once to avoid duplicate processing using INSERT OR IGNORE
-- The crawl order is managed using a **breadth-first search (BFS)** strategy,
+- The crawl order is managed using a **BFS** strategy,
   prioritizing the shallowest unvisited URL.
 - Retry logic tracks and limits repeated failures, with support for controlled retries.
 - Word counts are updated incrementally, preserving global frequency data across runs.
@@ -205,10 +205,10 @@ These simulations help verify that retries, fallbacks, and logging behave correc
 ## Improvements
 
 * Implement support for parsing and respecting robots.txt directives to ensure compliant and ethical crawling behavior (https://en.wikipedia.org/wiki/Robots.txt).
-* Multithreading - Although multithreading is not strictly necessary for the crawler’s purpose—especially since aggressive crawling can trigger rate limits or blacklisting—it may still be worthwhile to implement safe parallel processing as an exercise. This would provide a useful learning opportunity and lay the groundwork for future scalability, while still respecting polite crawling behavior.
+* Multithreading - Although multithreading is not strictly necessary for the crawler’s purpose, especially since aggressive crawling can trigger rate limits or blacklisting, it may still be worthwhile to implement safe parallel processing as an exercise. This would provide a useful learning opportunity and lay the groundwork for future scalability, while still respecting polite crawling behavior.
 * Consider parsing and extracting text from other types (e.g., PDFs).
 * Word Extraction Improvements
   - Use more sophisticated tokenization (e.g., nltk or spaCy) for better word extraction.
   - Filter out stop words and apply stemming or lemmatization for cleaner data.
 * Implement proper unit tests.
-* Implement more visually appealing HTML report.
+* Implement more visually appealing crawl report in HTML.
