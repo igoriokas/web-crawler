@@ -98,21 +98,26 @@ The crawler uses a breadth-first search (BFS) approach to traverse the website h
 
 ### Data Flow
 
-* **Startup & Config**
+* **Startup & Config**\
   Command-line arguments are parsed to initialize the crawl target URL, working directory, and depth. The working directory defines where all crawler data and state will be stored.
-* **Resumable Crawl with SQLite**
+
+* **Resumable Crawl with SQLite**\
   Crawl state (pending URLs, visited URLs, depth info) is stored and managed in an SQLite database located in [WORKDIR]/state.db. This allows safe resumption across runs.
+
 * **Crawling & Fetching**
   - Fetch pages using BFS up to specified depth
   - Avoid revisiting URLs using database records
   - Retry (with backoff) on transient errors (e.g. network timeouts, 429, 500, 502, 503, 504).\
-    Attempt recorded in the DB.
+    Attempt recorded in the DB
   - Do not retry on permanent failures (e.g. 403, 404, 501)
   - Permanent failures are recorded in the DB; crawl continues with next URL
-* **Content Processing**
+  - Update crawl report file
+
+* **Content Processing**\
   Each fetched HTML page is parsed for:
   - Links: Normalized and queued (into DB) if within scope and not visited.
   - Text: Extracted, cleaned, and stored as plain text files.
+
 * **Storage**
   - Crawl state managed in:           [WORKDIR]/state.db
   - Original pages saved in:          [WORKDIR]/pages/
@@ -122,8 +127,9 @@ The crawler uses a breadth-first search (BFS) approach to traverse the website h
   - Log file managed in:              [WORKDIR]/log.log
   - Crawl report saved in:            [WORKDIR]/report.txt
   - Aggregated word counts saved in:  [WORKDIR]/word_counts.json
-* **Completion**
-  A summary of the crawl (pages processed, total words, etc.) is printed at the end.
+
+* **Completion**\
+  A summary of the crawl (pages processed, failures, etc.) is printed at the end.
 
 ### Crawler State Management
 
