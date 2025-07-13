@@ -14,11 +14,14 @@ positional arguments:
   workdir            Working directory, for output and state (data-quotes)
 
 options:
-  -h, --help         show this help message and exit
-  -d, --depth DEPTH  Max crawl depth (default: 1)
-  -no-ui             Run in non-UI mode (headless)
+  -h, --help       show this help message and exit
+  -d MAX_DEPTH     Max crawl depth (default: 1)
+  -a MAX_ATTEMPTS  Max allowed attempts (default: 2)
+  -no-ui           Run in non-UI mode (headless)
+  -e               Enable random error injection (testing)
+  -p               Purge workdir to start from scratch (advanced)
 
-example: python crawler.py https://quotes.toscrape.com data-quotes -d 2
+example: python crawler.py https://quotes.toscrape.com data-quotes -d 2 -a 3 -e
 
 """
 
